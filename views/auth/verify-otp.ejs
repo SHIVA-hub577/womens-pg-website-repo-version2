@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Registration OTP — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>Verify Registration Email</h1>
+        <p>Enter the 6-digit registration code sent to<br><strong><%= email %></strong></p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } else { %>
+        <div class="alert alert-info">Code sent successfully. Please check your inbox.</div>
+      <% } %>
+
+      <form action="/auth/verify-otp" method="POST">
+        <input type="hidden" name="email" value="<%= email %>">
+        <input type="hidden" name="purpose" value="<%= purpose %>">
+        
+        <div class="form-group">
+          <label for="code">6-Digit OTP Code</label>
+          <input type="text" id="code" name="code" class="form-control" placeholder="123456" maxlength="6" pattern="\d{6}" required autofocus style="text-align: center; font-size: 1.4rem; letter-spacing: 6px;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Verify Email & Complete Registration</button>
+      </form>
+
+      <div class="otp-timer">
+        Code expires in <span id="timerCountdown">05:00</span>
+      </div>
+
+      <div style="margin-top: 1.25rem;">
+        <form action="<%= purpose === 'admin-register' ? '/admin/register' : '/register' %>" method="POST">
+          <input type="hidden" name="email" value="<%= email %>">
+          <input type="hidden" name="purpose" value="<%= purpose %>">
+          <button type="submit" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Resend Code</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var duration = 300; // 5 minutes in seconds
+      var display = document.getElementById('timerCountdown');
+      var timer = duration, minutes, seconds;
+      
+      var interval = setInterval(function () {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        if (display) {
+          display.textContent = minutes + ":" + seconds;
+        }
+
+        if (--timer < 0) {
+          clearInterval(interval);
+          if (display) display.textContent = "Expired";
+        }
+      }, 1000);
+    })();
+  </script>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

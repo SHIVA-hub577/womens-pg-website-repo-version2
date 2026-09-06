@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Dashboard Overview</h1>
+          <p style="color: var(--text-muted);">Live property statistics and room status</p>
+        </div>
+        <a href="/admin/tenants/new" class="btn btn-primary" style="width: auto;">+ Add New Resident</a>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-title">Total Rooms</div>
+          <div class="metric-value"><%= totalRooms %></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Total Residents</div>
+          <div class="metric-value" style="color: #22C55E;"><%= totalTenants %></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Occupied Rooms</div>
+          <div class="metric-value"><%= occupiedCount %></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Vacant Rooms</div>
+          <div class="metric-value" style="color: #F59E0B;"><%= vacantCount %></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Room Capacity Overview</h2>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Room #</th>
+                <th>Sharing Type</th>
+                <th>Rent / Mo</th>
+                <th>Advance</th>
+                <th>Occupancy</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% rooms.forEach(room => { %>
+                <tr>
+                  <td><strong>Room <%= room.roomNumber %></strong></td>
+                  <td><%= room.sharingType %> Sharing</td>
+                  <td>₹<%= room.rent.toLocaleString('en-IN') %></td>
+                  <td>₹<%= room.advance.toLocaleString('en-IN') %></td>
+                  <td><%= room.tenants ? room.tenants.length : 0 %> / <%= room.capacity %></td>
+                  <td>
+                    <% if (room.status === 'Occupied') { %>
+                      <span class="badge badge-green">Occupied</span>
+                    <% } else if (room.status === 'Vacant') { %>
+                      <span class="badge badge-yellow">Vacant</span>
+                    <% } else { %>
+                      <span class="badge badge-purple"><%= room.status %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

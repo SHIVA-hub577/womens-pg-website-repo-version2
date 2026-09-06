@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome — Pujyasritha's Living Women's PG</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .landing-wrapper {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      text-align: center;
+    }
+    .landing-hero {
+      margin-bottom: 2.5rem;
+    }
+    .landing-hero h1 {
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .landing-hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .portal-card {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .portal-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .portal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(108, 99, 255, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .portal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .portal-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="landing-wrapper">
+    <div class="landing-hero">
+      <h1>Pujyasritha's Living</h1>
+      <p>Safe, Comfortable & Modern Women's PG Management Portal</p>
+    </div>
+
+    <div class="portal-grid">
+      <!-- Tenant Portal Card -->
+      <div class="portal-card">
+        <div>
+          <div class="portal-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="portal-title">Resident Portal</div>
+          <div class="portal-desc">Access your room details, rent information, and resident services.</div>
+        </div>
+        <div class="action-group">
+          <a href="/login" class="btn btn-primary">Resident Login</a>
+          <a href="/register" class="btn btn-outline">New Resident Register</a>
+        </div>
+      </div>
+
+      <!-- Admin Portal Card -->
+      <div class="portal-card">
+        <div>
+          <div class="portal-icon" style="background: rgba(34, 197, 94, 0.1); color: #15803D;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          </div>
+          <div class="portal-title">PG Management</div>
+          <div class="portal-desc">Manage rooms, tenant directory, property occupancy, and rent tracking.</div>
+        </div>
+        <div class="action-group">
+          <a href="/admin/login" class="btn btn-primary" style="background-color: #2F2F2F;">Admin Login</a>
+          <a href="/admin/register" class="btn btn-outline" style="border-color: #2F2F2F; color: #2F2F2F;">Admin Register</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

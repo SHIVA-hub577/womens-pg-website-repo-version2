@@ -1,0 +1,197 @@
+# UI/UX Design Guidelines
+### Pujyasritha's Living — Women's PG Website
+**Product Requirements Document — Design Section**
+
+---
+
+## 1. Design Principles
+
+The website must follow these five core principles:
+
+| Principle | Meaning |
+|---|---|
+| **Simplicity First** | Avoid clutter; keep only necessary elements on each screen |
+| **Consistency** | Same colors, fonts, and spacing across every page |
+| **Clarity** | Information should be instantly understandable at a glance |
+| **Accessibility** | Usable by non-technical users with no learning curve |
+| **Mobile-First** | Designed primarily for phone users, scaled up for desktop |
+
+---
+
+## 2. Color System
+
+**Primary (Brand):**
+- Soft Purple / Violet — `#6C63FF` (conveys calm and safety)
+
+**Secondary:**
+- White — `#FFFFFF` (background)
+- Light Grey — `#F5F6FA` (sections / cards)
+- Dark Grey — `#2F2F2F` (text)
+
+**Status Colors:**
+- Paid / Completed — Green `#22C55E`
+- Pending — Red `#EF4444`
+- In Progress — Yellow `#F59E0B`
+
+**Rules:**
+- Use a maximum of 3–4 colors total
+- Avoid bright or neon shades
+- Maintain strong contrast for readability (WCAG AA minimum)
+
+---
+
+## 3. Typography
+
+**Fonts:**
+- Headings — Poppins or Inter
+- Body — Roboto or Open Sans
+
+**Hierarchy:**
+
+| Level | Size |
+|---|---|
+| H1 (Page Title) | 24–32px |
+| H2 (Section Title) | 18–22px |
+| Body | 14–16px |
+
+**Rules:**
+- Limit to 1–2 font families
+- Keep spacing consistent across headings and body text
+- Avoid long, dense paragraphs — break into short lines
+
+---
+
+## 4. Layout & Spacing
+
+**Grid System:**
+- Desktop: 12-column grid
+- Mobile: single column
+
+**Spacing:**
+- Section spacing: 24–40px
+- Card padding: 16–20px
+- Button padding: 10–14px
+
+**Alignment:**
+- Left-align all text
+- Keep equal spacing between elements
+
+---
+
+## 5. Component Design
+
+### Cards (primary UI element)
+- Rounded corners: 8–12px
+- Soft, subtle shadow (never heavy)
+- Clear title + value pairing, e.g.:
+  ```
+  Total Rooms: 20
+  Occupied: 15
+  ```
+
+### Buttons
+- **Primary:** filled purple background, white text
+- **Secondary:** outline style, purple border/text
+- Consistent style sitewide; clear action labels ("Add Tenant", "Save")
+
+### Forms
+- Label positioned above each input field
+- Use placeholder text as a hint, not a substitute for labels
+- Show validation messages inline and clearly
+- Keep forms as short as possible; split long forms into steps
+
+---
+
+## 6. Dashboard Design
+
+- Use cards to surface key metrics
+- Highlight the most important numbers visually (size/color)
+- Avoid overloading the screen with charts
+- Use icons to aid quick recognition
+
+**Example layout:**
+```
+[Total Rooms]   [Occupied]        [Vacant]
+[Rent Collected] [Pending Rent]
+[Repairs Pending] [Repairs Completed]
+```
+
+---
+
+## 7. Mobile Responsiveness
+
+- Single-column layout on mobile
+- Large, thumb-friendly buttons
+- Hamburger menu for navigation
+- Convert data tables into stacked cards on small screens
+
+---
+
+## 8. Navigation
+
+- **Desktop:** persistent sidebar
+- **Mobile:** hamburger menu
+
+**Menu items:** Dashboard · Tenants · Rooms · Rent · Repairs
+
+**Rules:**
+- Always highlight the active page
+- Keep the menu short — no more than 5–6 top-level items
+
+---
+
+## 9. Performance & UX
+
+- Target load time under 2 seconds
+- Avoid heavy or unnecessary animations
+- Use lazy loading for long lists
+- Always give user feedback (loading states, success/error messages)
+
+---
+
+## 10. Common Mistakes to Avoid
+
+- Too many colors on one screen
+- Crowded, metric-heavy dashboards
+- Small, low-contrast text
+- Overly complex forms
+- Inconsistent spacing or styling between pages
+
+---
+
+## 11. Design Vision
+
+The final product should feel **clean, professional, calm, and fast** —
+simple enough for a non-technical user like WhatsApp, but structured
+enough for daily operations like a business dashboard.
+
+---
+
+## 12. Application Architecture (MVC + EJS)
+
+The project will follow the **MVC (Model–View–Controller)** pattern, with **EJS** as the templating engine for server-rendered views.
+
+**Layer responsibilities:**
+
+| Layer | Responsibility |
+|---|---|
+| **Model** | Mongoose schemas and data-access logic (Tenant, Room, Rent, Repair) |
+| **View** | EJS templates that render HTML using data passed from controllers |
+| **Controller** | Handles requests, runs business logic, fetches/updates models, renders the matching view |
+| **Routes** | Maps URLs to controller functions |
+
+**EJS conventions:**
+- Use partials (header, sidebar, footer) with `<%- include('partials/...') %>` to keep layout consistent across pages
+- Pass only the data a view needs — no business logic inside `.ejs` files
+- Use `<%= %>` for escaped output (safe by default) and `<%- %>` only for trusted HTML (e.g. partials)
+- Keep loops/conditionals in views simple (list rendering, status badges); anything more complex belongs in the controller
+
+**Request flow:**
+```
+Browser request → Route → Controller → Model (DB) → Controller → View (EJS) → HTML response
+```
+
+**Rules:**
+- Controllers never contain HTML; views never contain database queries
+- One controller per resource (Tenant, Room, Rent, Repair), matching the routes and views
+- Shared UI (buttons, cards, status badges) built as reusable EJS partials, not repeated per page

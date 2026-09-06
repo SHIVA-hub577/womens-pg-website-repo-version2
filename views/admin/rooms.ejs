@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rooms Directory — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Rooms Overview</h1>
+          <p style="color: var(--text-muted);">Overview of PG rooms, sharing capacity, and current occupants</p>
+        </div>
+        <a href="/admin/tenants/new" class="btn btn-primary" style="width: auto;">+ Add New Resident</a>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Room No</th>
+                <th>Sharing</th>
+                <th>Monthly Rent</th>
+                <th>Advance Required</th>
+                <th>Capacity</th>
+                <th>Current Occupants</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% rooms.forEach(room => { %>
+                <tr>
+                  <td><strong>Room <%= room.roomNumber %></strong></td>
+                  <td><%= room.sharingType %> Sharing</td>
+                  <td>₹<%= room.rent.toLocaleString('en-IN') %></td>
+                  <td>₹<%= room.advance.toLocaleString('en-IN') %></td>
+                  <td><%= room.capacity %> beds</td>
+                  <td>
+                    <% if (room.tenants && room.tenants.length > 0) { %>
+                      <ul style="list-style: none; padding-left: 0;">
+                        <% room.tenants.forEach(t => { %>
+                          <li>• <%= t.name %> (<%= t.phone %>)</li>
+                        <% }); %>
+                      </ul>
+                    <% } else { %>
+                      <span style="color: var(--text-muted);">None</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (room.status === 'Occupied') { %>
+                      <span class="badge badge-green">Occupied</span>
+                    <% } else if (room.status === 'Vacant') { %>
+                      <span class="badge badge-yellow">Vacant</span>
+                    <% } else { %>
+                      <span class="badge badge-purple"><%= room.status %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

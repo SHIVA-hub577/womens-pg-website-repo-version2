@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Complaints — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container" style="max-width: 900px;">
+    <main class="main-content">
+      <div style="margin-bottom: 1.5rem;">
+        <h1>Resident Complaints</h1>
+        <p style="color: var(--text-muted);">Raise issues regarding your room/services and track resolution status.</p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <!-- Raise Complaint Form Card -->
+      <% if (!hasAssignedRoom) { %>
+        <div class="card" style="text-align: center; padding: 2.5rem 1.5rem; margin-bottom: 2rem;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" style="margin-bottom: 1rem;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <h3 style="margin-bottom: 0.5rem;">Room Allocation Required</h3>
+          <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1rem auto;">
+            You'll be able to raise complaints once you have a room assigned by PG management.
+          </p>
+          <span class="badge badge-purple" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">Status: Account Unassigned</span>
+        </div>
+      <% } else { %>
+        <div class="card" style="margin-bottom: 2rem;">
+          <h2 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Raise a New Complaint (Room <%= roomNumber %>)
+          </h2>
+
+          <form action="/tenant/complaints" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="description">Problem Description *</label>
+              <textarea id="description" name="description" class="form-control" rows="4" placeholder="Describe the issue in detail (e.g. plumbing leak, electrical issue, Wi-Fi connectivity)..." required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="photo">Attach Photo Evidence (Optional — Max 5MB)</label>
+              <input type="file" id="photo" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
+              Submit Complaint
+            </button>
+          </form>
+        </div>
+      <% } %>
+
+      <!-- Complaints Sections / History -->
+      <!-- Active Complaints -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h2>Active Complaints (<%= raisedComplaints ? raisedComplaints.length : 0 %>)</h2>
+        <div style="margin-top: 1rem;">
+          <% if (raisedComplaints && raisedComplaints.length > 0) { %>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <% raisedComplaints.forEach(c => { %>
+                <div style="background: #FFF; border: 1px solid var(--border-color); border-left: 4px solid #F59E0B; border-radius: var(--radius); padding: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div>
+                      <span class="badge badge-yellow">Status: Raised</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">Raised on <%= new Date(c.raisedAt).toLocaleString('en-IN') %></span>
+                    </div>
+                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--primary);">Room <%= c.roomNumber %></span>
+                  </div>
+                  <p style="margin-top: 0.5rem; font-size: 0.95rem; color: var(--text-dark); white-space: pre-wrap;"><%= c.description %></p>
+                  
+                  <% if (c.photo) { %>
+                    <div style="margin-top: 0.75rem;">
+                      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem;">Attached Photo:</p>
+                      <a href="<%= c.photo %>" target="_blank">
+                        <img src="<%= c.photo %>" alt="Complaint photo" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;">
+                      </a>
+                    </div>
+                  <% } %>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">No active open complaints.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Resolved Complaints -->
+      <div class="card">
+        <h2>Resolved Complaints (<%= resolvedComplaints ? resolvedComplaints.length : 0 %>)</h2>
+        <div style="margin-top: 1rem;">
+          <% if (resolvedComplaints && resolvedComplaints.length > 0) { %>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <% resolvedComplaints.forEach(c => { %>
+                <div style="background: #FFF; border: 1px solid var(--border-color); border-left: 4px solid #22C55E; border-radius: var(--radius); padding: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div>
+                      <span class="badge badge-green">Status: Resolved</span>
+                      <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">Resolved on <%= c.resolvedAt ? new Date(c.resolvedAt).toLocaleString('en-IN') : 'N/A' %></span>
+                    </div>
+                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--primary);">Room <%= c.roomNumber %></span>
+                  </div>
+
+                  <div style="margin-bottom: 1rem;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Original Request:</p>
+                    <p style="font-size: 0.95rem; color: var(--text-dark); margin-top: 0.2rem;"><%= c.description %></p>
+                    <% if (c.photo) { %>
+                      <a href="<%= c.photo %>" target="_blank" style="display: inline-block; margin-top: 0.4rem;">
+                        <img src="<%= c.photo %>" alt="Complaint photo" style="max-width: 140px; max-height: 100px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;">
+                      </a>
+                    <% } %>
+                  </div>
+
+                  <!-- Management Resolution Box -->
+                  <div style="background: rgba(34, 197, 94, 0.08); border-radius: 8px; padding: 1rem; border: 1px dashed rgba(34, 197, 94, 0.3);">
+                    <p style="font-size: 0.85rem; color: #15803D; font-weight: 700;">Management Resolution Note:</p>
+                    <p style="font-size: 0.95rem; color: #1F2937; margin-top: 0.3rem;"><%= c.resolutionNote %></p>
+                    
+                    <% if (c.resolutionPhoto) { %>
+                      <div style="margin-top: 0.6rem;">
+                        <p style="font-size: 0.8rem; color: #15803D; margin-bottom: 0.3rem; font-weight: 600;">Resolution Photo Evidence:</p>
+                        <a href="<%= c.resolutionPhoto %>" target="_blank">
+                          <img src="<%= c.resolutionPhoto %>" alt="Resolution photo" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.3); object-fit: cover;">
+                        </a>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">No resolved complaints history.</p>
+          <% } %>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

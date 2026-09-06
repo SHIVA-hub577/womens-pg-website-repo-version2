@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payments Overview — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Rent Payments Overview</h1>
+          <p style="color: var(--text-muted);">View, update, and export monthly rent payment records.</p>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <!-- Month Picker Dropdown -->
+          <form action="/admin/payments" method="GET" style="display: flex; align-items: center; gap: 0.5rem;">
+            <label for="month" style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">Month:</label>
+            <select id="month" name="month" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 0.4rem 0.8rem;">
+              <% if (validMonths && validMonths.length > 0) { %>
+                <% validMonths.forEach(m => { %>
+                  <option value="<%= m %>" <%= m === selectedMonth ? 'selected' : '' %>>
+                    <%= new Date(m + '-01T00:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %> (<%= m %>)
+                  </option>
+                <% }); %>
+              <% } %>
+            </select>
+          </form>
+
+          <!-- CSV Download Button -->
+          <a href="/admin/payments/export?month=<%= selectedMonth %>" class="btn btn-outline" style="width: auto; display: flex; align-items: center; gap: 0.4rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV
+          </a>
+
+          <!-- Send to Admin Email Button -->
+          <a href="/admin/payments/email?month=<%= selectedMonth %>" class="btn btn-primary" style="width: auto; display: flex; align-items: center; gap: 0.4rem;" onclick="return confirm('Send payments CSV report for <%= selectedMonth %> to your admin email?')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Send to Email
+          </a>
+        </div>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <!-- Summary Cards -->
+      <div class="metric-grid" style="margin-bottom: 1.5rem;">
+        <div class="metric-card">
+          <div class="metric-title">Total Expected Rent</div>
+          <div class="metric-value">₹<%= summary ? summary.totalExpected.toLocaleString('en-IN') : '0' %></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;">For <%= selectedMonth %></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Total Collected</div>
+          <div class="metric-value" style="color: #22C55E;">₹<%= summary ? summary.totalCollected.toLocaleString('en-IN') : '0' %></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;"><%= summary ? summary.paidCount : 0 %> Paid in full</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Pending Amount</div>
+          <div class="metric-value" style="color: #EF4444;">₹<%= summary ? summary.totalPending.toLocaleString('en-IN') : '0' %></div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;"><%= summary ? summary.pendingCount : 0 %> Pending / Partial</div>
+        </div>
+      </div>
+
+      <!-- Payments Table -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+          <h2 style="margin: 0; font-size: 1.1rem;">Resident Payment Records (<%= records ? records.length : 0 %>)</h2>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Period: <%= selectedMonth %></span>
+        </div>
+
+        <% if (records && records.length > 0) { %>
+          <div style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-color);">
+                  <th style="padding: 1rem 1.5rem;">Resident Details</th>
+                  <th style="padding: 1rem 1.5rem;">Room</th>
+                  <th style="padding: 1rem 1.5rem;">Monthly Rent</th>
+                  <th style="padding: 1rem 1.5rem;">Amount Paid</th>
+                  <th style="padding: 1rem 1.5rem;">Status</th>
+                  <th style="padding: 1rem 1.5rem;">Last Updated</th>
+                  <th style="padding: 1rem 1.5rem; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% records.forEach(r => { %>
+                  <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem 1.5rem;">
+                      <strong><%= r.tenantName %></strong>
+                      <div style="font-size: 0.8rem; color: var(--text-muted);">ID: <%= r.tenantId %></div>
+                    </td>
+                    <td style="padding: 1rem 1.5rem;">Room <%= r.roomNumber %></td>
+                    <td style="padding: 1rem 1.5rem; font-weight: 600;">₹<%= r.rent.toLocaleString('en-IN') %></td>
+                    <td style="padding: 1rem 1.5rem; font-weight: 600; color: <%= r.status === 'Paid' ? '#22C55E' : (r.status === 'Partial' ? '#EAB308' : '#EF4444') %>;">
+                      ₹<%= r.amountPaid.toLocaleString('en-IN') %>
+                    </td>
+                    <td style="padding: 1rem 1.5rem;">
+                      <% if (r.status === 'Paid') { %>
+                        <span class="badge badge-green">Paid</span>
+                      <% } else if (r.status === 'Partial') { %>
+                        <span class="badge badge-yellow" style="background: rgba(234, 179, 8, 0.15); color: #CA8A04;">Partial</span>
+                      <% } else { %>
+                        <span class="badge badge-red" style="background: rgba(239, 68, 68, 0.15); color: #DC2626;">Pending</span>
+                      <% } %>
+                    </td>
+                    <td style="padding: 1rem 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                      <% if (r.paymentDate) { %>
+                        <%= new Date(r.paymentDate).toLocaleDateString('en-IN') %>
+                      <% } else { %>
+                        Not Paid
+                      <% } %>
+                      <% if (r.updatedBy) { %>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">By: <%= r.updatedBy %></div>
+                      <% } %>
+                    </td>
+                    <td style="padding: 1rem 1.5rem; text-align: right;">
+                      <!-- Quick Action Form -->
+                      <form action="/admin/payments/<%= r.tenantId %>/update" method="POST" style="display: inline-flex; gap: 0.4rem; align-items: center; justify-content: flex-end;" onsubmit="return handleStatusSubmit(this, <%= r.rent %>);">
+                        <input type="hidden" name="month" value="<%= selectedMonth %>">
+                        <input type="hidden" name="amountPaid" value="<%= r.amountPaid %>">
+
+                        <select name="status" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="handleStatusChange(this, <%= r.rent %>)">
+                          <option value="Paid" <%= r.status === 'Paid' ? 'selected' : '' %>>Paid</option>
+                          <option value="Partial" <%= r.status === 'Partial' ? 'selected' : '' %>>Partial</option>
+                          <option value="Pending" <%= r.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; width: auto;">Save</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            No resident records found for <%= selectedMonth %>.
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function handleStatusChange(selectElem, roomRent) {
+      const form = selectElem.form;
+      const amountInput = form.querySelector('input[name="amountPaid"]');
+      const val = selectElem.value;
+
+      if (val === 'Partial') {
+        const currentVal = Number(amountInput.value) || 0;
+        const promptVal = prompt(`Enter partial payment amount for this resident (₹1 to ₹${roomRent - 1}):`, currentVal > 0 && currentVal < roomRent ? currentVal : Math.floor(roomRent / 2));
+        if (promptVal !== null) {
+          const parsed = Number(promptVal);
+          if (isNaN(parsed) || parsed <= 0 || parsed >= roomRent) {
+            alert(`Invalid partial amount! Please enter a number between ₹1 and ₹${roomRent - 1}.`);
+            selectElem.value = 'Pending';
+            amountInput.value = '0';
+          } else {
+            amountInput.value = parsed;
+          }
+        } else {
+          selectElem.value = 'Pending';
+          amountInput.value = '0';
+        }
+      } else if (val === 'Paid') {
+        amountInput.value = roomRent;
+      } else if (val === 'Pending') {
+        amountInput.value = 0;
+      }
+    }
+
+    function handleStatusSubmit(form, roomRent) {
+      const status = form.querySelector('select[name="status"]').value;
+      const amountInput = form.querySelector('input[name="amountPaid"]');
+      if (status === 'Partial') {
+        const parsed = Number(amountInput.value);
+        if (isNaN(parsed) || parsed <= 0 || parsed >= roomRent) {
+          alert(`Please provide a valid partial amount between ₹1 and ₹${roomRent - 1}.`);
+          return false;
+        }
+      }
+      return true;
+    }
+  </script>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

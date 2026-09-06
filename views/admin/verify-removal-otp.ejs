@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Resident Removal OTP — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Verify Resident Removal OTP</h1>
+          <p style="color: var(--text-muted);">Enter the 6-digit OTP sent to the resident to confirm and finalize removal.</p>
+        </div>
+        <a href="/admin/remove-tenant" class="btn btn-outline" style="width: auto;">&larr; Cancel & Return</a>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <div style="background: rgba(108, 99, 255, 0.08); border: 1px solid rgba(108, 99, 255, 0.2); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.1rem;">
+            Removal Request Details
+          </h3>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Resident Name:</strong> <%= residentName %></p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Resident Email:</strong> <%= residentEmail %></p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Room Number:</strong> Room <%= roomNumber %></p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+            📩 A 6-digit OTP code has been emailed to <strong><%= residentEmail %></strong>. Ask the resident for the code to complete removal.
+          </p>
+        </div>
+
+        <form action="/admin/remove-tenant/verify" method="POST">
+          <input type="hidden" name="tenantId" value="<%= tenantId %>">
+          <input type="hidden" name="roomNumber" value="<%= roomNumber %>">
+
+          <div class="form-group">
+            <label for="code" style="font-weight: 600;">Enter 6-Digit OTP *</label>
+            <input 
+              type="text" 
+              id="code" 
+              name="code" 
+              class="form-control" 
+              placeholder="e.g. 123456" 
+              maxlength="6" 
+              pattern="[0-9]{6}" 
+              required 
+              autofocus
+              style="letter-spacing: 4px; font-size: 1.2rem; text-align: center;"
+            >
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn" style="background-color: #EF4444; color: #FFFFFF; flex: 1;">
+              Verify OTP & Complete Removal
+            </button>
+            <a href="/admin/remove-tenant" class="btn btn-outline" style="text-align: center;">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

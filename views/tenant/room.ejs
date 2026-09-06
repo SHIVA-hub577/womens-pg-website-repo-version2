@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Room — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container" style="max-width: 900px;">
+    <main class="main-content">
+      <h1>My Resident Portal</h1>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Welcome back, <strong><%= user ? user.name : 'Resident' %></strong></p>
+
+      <% if (room && tenant) { %>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-title">Assigned Room</div>
+            <div class="metric-value">Room <%= room.roomNumber %></div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;"><%= room.sharingType %> Sharing Room</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Monthly Rent</div>
+            <div class="metric-value" style="color: #22C55E;">₹<%= tenant.rent ? tenant.rent.toLocaleString('en-IN') : room.rent.toLocaleString('en-IN') %></div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;">Due monthly</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Advance Deposit Paid</div>
+            <div class="metric-value" style="color: var(--primary);">₹<%= tenant.advancePaid ? tenant.advancePaid.toLocaleString('en-IN') : room.advance.toLocaleString('en-IN') %></div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem;">Refundable deposit</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Occupancy Details</h2>
+          <div style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Tenant ID</p>
+              <p style="font-weight: 600; font-size: 1rem;"><%= tenant.tenantId || 'N/A' %></p>
+            </div>
+            <div>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Phone Number</p>
+              <p style="font-weight: 600; font-size: 1rem;"><%= tenant.phone || 'N/A' %></p>
+            </div>
+            <div>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Joining Date</p>
+              <p style="font-weight: 600; font-size: 1rem;"><%= tenant.joiningDate ? new Date(tenant.joiningDate).toLocaleDateString('en-IN') : 'N/A' %></p>
+            </div>
+            <div>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Occupancy Status</p>
+              <p><span class="badge badge-green"><%= tenant.status || 'Active Resident' %></span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Roommates</h2>
+          <% if (room.tenants && room.tenants.length > 1) { %>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% room.tenants.forEach(t => { %>
+                    <% if (t.email !== user.email && t.tenantId !== user.tenantId) { %>
+                      <tr>
+                        <td><strong><%= t.name %></strong></td>
+                        <td><span class="badge badge-purple">Active</span></td>
+                      </tr>
+                    <% } %>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">You currently have no roommates in this room.</p>
+          <% } %>
+        </div>
+
+      <% } else { %>
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" stroke-width="2" style="margin-bottom: 1rem;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <h2 style="margin-bottom: 0.5rem;">No Room Assigned Yet</h2>
+          <p style="color: var(--text-muted); max-width: 450px; margin: 0 auto 1.5rem auto;">
+            Your tenant account (<strong><%= user ? user.email : '' %></strong>) has been registered successfully, but you have not been assigned to a PG room yet. Please contact the PG manager for room allocation.
+          </p>
+          <span class="badge badge-purple" style="font-size: 0.9rem; padding: 0.4rem 1rem;">Status: Account Registered (Unassigned)</span>
+        </div>
+      <% } %>
+
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

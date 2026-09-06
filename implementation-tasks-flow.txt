@@ -1,0 +1,339 @@
+# Implementation Plan — Level 1: Website Design & Authentication
+## Pujyasritha's Living — Women's PG Management System
+
+Stack: Node.js + Express + MongoDB (Mongoose) + EJS, MVC architecture.
+Scope: design system + authentication only. No rent/repair/complaint CRUD yet — that is Level 2.
+
+---
+
+## 1. Overview
+
+Level 1 delivers:
+- A consistent, mobile-first EJS layout (navbar, sidebar, footer) driven by session state (Guest / Admin / Tenant)
+- OTP-based email login for both Admins and Tenants, using the existing `services/emailservices.js`
+- Google OAuth 2.0 login for both roles, as a secondary method to OTP
+- Auto-registration on first login for Tenants (linked to existing seeded room data by email) and Admins (restricted to an allowlist)
+- Persisted sessions (MongoDB-backed), with role-based route protection
+- Read-only dashboard views rendering the already-seeded `room-data` collection
+
+---
+
+## 2. Environment & Configuration
+
+### `.env` (modify)
+Ensure the following are present:
+- `MONGODB_URI` — already configured, points to the `womens-pg` Atlas database
+- `GOOGLECLIENTID`, `GOOGLECLIENTSECRET` — Google OAuth credentials, already configured
+- `GOOGLEUSER` — Gmail address used for both OAuth2 mail auth and the OTP "from" address
+- `GOOGLEREFRESHTOKEN` — refresh token for Gmail OAuth2 (fix the naming — the existing service file has a typo/mismatch here, see §5)
+- `SESSION_SECRET` — random string for signing the session cookie
+- `ADMIN_EMAILS` — comma-separated allowlist of emails permitted to register/log in as Admin (e.g. `ADMIN_EMAILS=owner@example.com,manager@example.com`)
+
+### `config/db.js` (new)
+- Connect Mongoose to MongoDB Atlas using `MONGODB_URI`
+- Set `dbName: 'womens-pg'` explicitly
+- Configure DNS fallback resolvers (`8.8.8.8`, `1.1.1.1`) to avoid Atlas SRV lookup issues on some networks
+- Export a single `connectDB()` function called once from `app.js`
+
+### `config/passport.js` (new)
+Register **two separate named Passport strategies** — not one shared strategy — because each needs its own callback URL and its own post-auth behavior:
+
+```js
+passport.use('google-admin', new GoogleStrategy({
+  clientID: process.env.GOOGLECLIENTID,
+  clientSecret: process.env.GOOGLECLIENTSECRET,
+  callbackURL: '/auth/google/admin/callback'
+}, (accessToken, refreshToken, profile, done) => done(null, profile)));
+
+passport.use('google-tenant', new GoogleStrategy({
+  clientID: process.env.GOOGLECLIENTID,
+  clientSecret: process.env.GOOGLECLIENTSECRET,
+  callbackURL: '/auth/google/tenant/callback'
+}, (accessToken, refreshToken, profile, done) => done(null, profile)));
+```
+
+- Do **not** register `passport.serializeUser` / `passport.deserializeUser`. Sessions are managed manually via `req.session.user` (see §7), and every OAuth route below uses `{ session: false }`, so Passport's own session persistence is never invoked and does not need to be configured.
+- **Manual step (outside code):** add both callback URLs to the Authorized Redirect URIs list for this OAuth client in Google Cloud Console:
+  - `https://<your-domain>/auth/google/admin/callback`
+  - `https://<your-domain>/auth/google/tenant/callback`
+
+---
+
+## 3. Design System (reference — already specified in the PRD)
+
+Apply consistently across every view built in this phase:
+
+- **Colors:** primary `#6C63FF` (soft purple); background `#FFFFFF`; section background `#F5F6FA`; text `#2F2F2F`; status colors — green `#22C55E` (paid/completed), red `#EF4444` (pending), yellow `#F59E0B` (in progress)
+- **Fonts:** Poppins/Inter for headings, Roboto/Open Sans for body; H1 24–32px, H2 18–22px, body 14–16px
+- **Cards:** 8–12px rounded corners, soft shadow, title + value layout
+- **Buttons:** primary = filled purple with white text; secondary = outline
+- **Layout:** 12-column grid on desktop, single column on mobile; section spacing 24–40px; left-aligned text
+- **Mobile:** hamburger menu, thumb-friendly buttons, tables convert to stacked cards
+
+### `public/css/style.css` (new)
+Implement the above as CSS variables and utility classes, consumed by all EJS views.
+
+---
+
+## 4. Models
+
+### `models/Admin.js` (new)
+```
+email       String, required, unique
+name        String
+googleId    String, optional
+createdAt   Date, default: Date.now
+```
+
+### `models/Tenant.js` (new)
+Holds **auth/profile fields and room references only** — never a cached copy of rent, status, or other live room data (that always comes from `Room`, queried live, so it can never drift out of sync — see §6, `dashboardController`):
+```
+email       String, required, unique
+name        String
+phone       String
+googleId    String, optional
+tenantId    String, optional  — reference to the embedded tenant in Room
+roomNumber  String, optional  — reference to the assigned Room
+createdAt   Date, default: Date.now
+```
+
+### `models/Otp.js` (new)
+```
+email       String, required
+code        String, required
+purpose     String, enum: ['admin-login', 'tenant-login'], required
+expiresAt   Date, required
+createdAt   Date, required
+```
+- TTL index: `{ expiresAt: 1 }` with `{ expireAfterSeconds: 0 }` — this purges stale/expired documents from storage automatically, but is **not** relied on to enforce expiry at verification time (see §6, `verifyOtp`), since MongoDB's TTL sweep runs periodically (~every 60s), not the instant a document expires.
+- No permanent `verified` flag — a verified OTP is deleted immediately, not flagged.
+
+### `models/Room.js` (new)
+Maps to the **existing, already-seeded** `room-data` collection — do not re-seed or alter existing documents, only add a Mongoose schema over them:
+```
+roomNumber   String
+sharingType  Number
+rent         Number
+advance      Number
+status       String
+capacity     Number
+tenants: [{
+  tenantId      String
+  name          String
+  age           Number
+  gender        String
+  phone         String
+  email         String   ← add this field to each embedded tenant in the
+                            seeded data now, so OTP/OAuth login can match
+                            tenants by email (the single lookup key used
+                            throughout this plan)
+  joiningDate   Date
+  rent          Number
+  advancePaid   Number
+  status        String
+}]
+```
+
+---
+
+## 5. Services
+
+### `services/emailservices.js` (modify)
+Fix the existing mismatch: the transporter's `auth` block reads `process.env.GOOGLEUSER`, `GOOGLECLIENTID`, `GOOGLECLIENTSECRET`, `GOOGLEREFRESHTOKEN` — but the `sendEmail` function's `from` field currently reads a *different* variable (`EMAIL_USER`). Standardize on `GOOGLEUSER` everywhere (auth **and** the `from` address), so the sender identity actually matches the authenticated account. No other changes needed — `sendEmail(to, subject, text, html)` stays the exported interface, and this is what `authController.sendOtp` calls directly for OTP delivery (no new mail transport).
+
+---
+
+## 6. Middleware
+
+### `middlewares/authMiddleware.js` (new)
+- `setUserLocals(req, res, next)` — sets `res.locals.user = req.session.user` so every EJS view can read the logged-in user (or `undefined` for guests) without each controller passing it explicitly. Mounted globally in `app.js`.
+- `isAdmin(req, res, next)` — allows through only if `req.session.user && req.session.user.role === 'admin'`; otherwise redirects to `/admin/login`.
+- `isTenant(req, res, next)` — allows through only if `req.session.user && req.session.user.role === 'tenant'`; otherwise redirects to `/login`.
+
+---
+
+## 7. Controllers
+
+### `controllers/authController.js` (new)
+
+**`renderTenantLogin(req, res)`**
+- Renders `views/auth/login.ejs` (email-only form, plus a "Continue with Google" button linking to `/auth/google/tenant`).
+
+**`renderAdminLogin(req, res)`**
+- Renders `views/auth/admin-login.ejs` (email-only form, plus a "Continue with Google" button linking to `/auth/google/admin`).
+
+**`sendOtp(req, res)`** — `POST /auth/send-otp`, body: `{ email, purpose }`
+1. Cooldown check: look up an existing `Otp` doc for this `email` + `purpose`. If one exists and `Date.now() - otp.createdAt < 60000`, re-render the current form (login or verify-otp, whichever the request came from) with a "Please wait 60 seconds before requesting a new OTP" error — do not send a new email.
+2. Generate a random 6-digit code.
+3. Upsert the `Otp` document for `{ email, purpose }`, explicitly `$set`-ing **all three** of `code`, `createdAt: new Date()`, and `expiresAt: new Date(Date.now() + 5 * 60 * 1000)` on every call (not just on insert) — this is what makes the cooldown and expiry both reset correctly on a resend, rather than measuring from the very first OTP ever requested.
+4. Send the code via `emailservices.sendEmail(email, 'Your PG login code', ...)`.
+5. **On success**, render the verification page directly as the response to this request:
+   ```js
+   return res.render('auth/verify-otp', { email, purpose, error: null });
+   ```
+   passing `email` and `purpose` into the view so its form can carry them forward as hidden fields (see §9).
+
+**`verifyOtp(req, res)`** — `POST /auth/verify-otp`, body: `{ email, purpose, code }`
+1. Atomic, expiry-checked, single-use lookup:
+   ```js
+   const otpDoc = await Otp.findOneAndDelete({
+     email, purpose, code,
+     expiresAt: { $gt: new Date() }
+   });
+   if (!otpDoc) {
+     return res.render('auth/verify-otp', { email, purpose, error: 'Invalid or expired code.' });
+   }
+   ```
+   The `expiresAt: { $gt: new Date() }` filter is required in the query itself — the TTL index alone is not sufficient, since it does not guarantee an expired document has already been removed at the moment this check runs.
+2. **If `purpose === 'admin-login'`:**
+   - Check `email` against the `ADMIN_EMAILS` allowlist from `.env`. If not listed, render `admin-login` with an "Unauthorized email" error — do **not** create an Admin document.
+   - `Admin.findOne({ email })` — if found, use it; if not found, create a new `Admin` document (the allowlist check above already establishes this email is permitted to register).
+   - Set the full session object:
+     ```js
+     req.session.user = { id: admin._id, email: admin.email, name: admin.name, role: 'admin' };
+     ```
+   - Redirect to `/admin/dashboard`.
+3. **If `purpose === 'tenant-login'`:**
+   - `Tenant.findOne({ email })` — if found, this is a returning tenant; use this document directly (do not re-run the room lookup below).
+   - If not found, query `Room.findOne({ "tenants.email": email })`:
+     - **Match found:** create a new `Tenant` document using the matched embedded tenant's `tenantId`, `name`, `phone`, and the parent room's `roomNumber`.
+     - **No match:** create a bare `Tenant` document (`email` only, `roomNumber: null`) — a legitimately new tenant with no room assigned yet.
+   - Set the full session object:
+     ```js
+     req.session.user = {
+       id: tenant._id, email: tenant.email, name: tenant.name,
+       role: 'tenant', tenantId: tenant.tenantId, roomNumber: tenant.roomNumber
+     };
+     ```
+   - Redirect to `/dashboard`.
+
+**`googleAdminCallback(req, res)`** — handles `GET /auth/google/admin/callback` after Passport authenticates
+1. Read the authenticated email from `req.user` (Passport's profile object, available here since this callback itself still receives `req.user` from the strategy's `done()` call, even with `session: false` — it's just not persisted afterward).
+2. Check `ADMIN_EMAILS`. If not listed, redirect to `/admin/login?error=Unauthorized`.
+3. `Admin.findOne({ email })`:
+   - **Found:** update `googleId` on the existing document if not already set, save.
+   - **Not found:** create a new `Admin` document with this `email`, `name` (from the Google profile), and `googleId`.
+4. Set the full session object (identical shape to the OTP admin flow):
+   ```js
+   req.session.user = { id: admin._id, email: admin.email, name: admin.name, role: 'admin' };
+   ```
+5. Redirect to `/admin/dashboard`.
+
+**`googleTenantCallback(req, res)`** — handles `GET /auth/google/tenant/callback`
+1. Read the authenticated email from `req.user`.
+2. `Tenant.findOne({ email })`:
+   - **Found:** update `googleId` if not already set, save. Do not re-run the room lookup — this document's `tenantId`/`roomNumber` (if any) are already correct.
+   - **Not found:** query `Room.findOne({ "tenants.email": email })` exactly as in the OTP flow — create a linked or bare `Tenant` document accordingly, including `googleId`.
+3. Set the full session object (identical shape to the OTP tenant flow):
+   ```js
+   req.session.user = {
+     id: tenant._id, email: tenant.email, name: tenant.name,
+     role: 'tenant', tenantId: tenant.tenantId, roomNumber: tenant.roomNumber
+   };
+   ```
+4. Redirect to `/dashboard`.
+
+**`logout(req, res)`**
+- `req.session.destroy()`, then redirect to `/login`.
+
+### `controllers/dashboardController.js` (new)
+All of the following are **read-only** — no create/update/delete logic in this phase — and always query `Room` live rather than reading cached fields off `Tenant`:
+
+- **`getAdminDashboard`** — fetch all `Room` documents, aggregate: total rooms, occupied, vacant, total tenants (sum of embedded `tenants.length`). Render `views/admin/dashboard.ejs`.
+- **`getAdminRooms`** — fetch all `Room` documents. Render `views/admin/rooms.ejs` as a room list/table.
+- **`getAdminTenants`** — fetch all `Room` documents, flatten their embedded `tenants` arrays into one list (each entry annotated with its parent `roomNumber`). Render `views/admin/tenants.ejs`.
+- **`getTenantRoom`** — read `req.session.user.roomNumber` (or `tenantId`). If present, query `Room` live for that room and find the matching embedded tenant by `tenantId`, rendering their current rent/status/advance directly from `Room` — never from `Tenant`. If `roomNumber` is absent, render `views/tenant/room.ejs` with an empty "No Room Assigned" state instead of querying.
+
+---
+
+## 8. Routes
+
+### `routes/authRoutes.js` (new)
+```
+GET  /login                     -> authController.renderTenantLogin
+GET  /admin/login                -> authController.renderAdminLogin
+POST /auth/send-otp              -> authController.sendOtp
+POST /auth/verify-otp            -> authController.verifyOtp
+GET  /auth/google/admin          -> passport.authenticate('google-admin', { scope: ['profile','email'], session: false })
+GET  /auth/google/admin/callback -> passport.authenticate('google-admin', { failureRedirect: '/admin/login', session: false }), authController.googleAdminCallback
+GET  /auth/google/tenant         -> passport.authenticate('google-tenant', { scope: ['profile','email'], session: false })
+GET  /auth/google/tenant/callback -> passport.authenticate('google-tenant', { failureRedirect: '/login', session: false }), authController.googleTenantCallback
+GET  /auth/logout                -> authController.logout
+```
+
+### `routes/adminRoutes.js` (new)
+All routes protected by `isAdmin`:
+```
+GET /admin/dashboard  -> dashboardController.getAdminDashboard
+GET /admin/rooms      -> dashboardController.getAdminRooms
+GET /admin/tenants    -> dashboardController.getAdminTenants
+```
+
+### `routes/tenantRoutes.js` (new)
+All routes protected by `isTenant`:
+```
+GET /dashboard     -> dashboardController.getTenantRoom
+GET /tenant/room   -> dashboardController.getTenantRoom
+```
+
+---
+
+## 9. Views (EJS)
+
+### Partials — `views/partials/`
+- **`header.ejs`** — logo + navbar. Links change by `res.locals.user`:
+  - Guest: Login
+  - Admin: Dashboard, Rooms, Tenants, Logout
+  - Tenant: My Room, Logout
+  - Includes a responsive hamburger menu for mobile.
+- **`sidebar.ejs`** — Admin-only, shown alongside admin pages; highlights the active route.
+- **`footer.ejs`** — simple site footer.
+
+All pages include these via `<%- include('partials/header') %>` etc., inside a shared layout.
+
+### Auth views — `views/auth/`
+- **`login.ejs`** — Tenant login: single email input, submits to `POST /auth/send-otp` with `purpose=tenant-login`; "Continue with Google" button links to `GET /auth/google/tenant`.
+- **`admin-login.ejs`** — Admin login: identical shape, `purpose=admin-login`, Google button links to `GET /auth/google/admin`.
+- **`verify-otp.ejs`** — 6-digit code input, 300-second countdown timer, submits to `POST /auth/verify-otp` carrying `email` and `purpose` as hidden fields (passed in from `sendOtp`'s render call). A "Resend code" action re-submits to `POST /auth/send-otp` using the **same** `email`/`purpose` already on the page — not a blank form — so the cooldown logic in `sendOtp` applies to the same identifier. Displays the `error` passed in (invalid/expired code, or cooldown message) when present.
+
+### Dashboard views
+- **`views/admin/dashboard.ejs`** — metric cards (Total Rooms, Occupied, Vacant, Total Tenants), styled per §3.
+- **`views/admin/rooms.ejs`** — read-only room list/cards.
+- **`views/admin/tenants.ejs`** — read-only tenant list/cards, each showing its room number.
+- **`views/tenant/room.ejs`** — the logged-in tenant's room, rent, status, advance (live from `Room`), or an empty "No Room Assigned" state.
+
+---
+
+## 10. `app.js` (new — server entry point)
+
+Configures, in order:
+1. `connectDB()` from `config/db.js`
+2. `express-session`, backed by a MongoDB-based store (e.g. `connect-mongodb-session` or `connect-mongo`), using `SESSION_SECRET`, so sessions survive server restarts
+3. `passport.initialize()` — **without** `passport.session()`, since all OAuth routes use `{ session: false }` and sessions are managed manually via `req.session.user`
+4. `setUserLocals` middleware (mounted globally, before routes)
+5. EJS view engine, `views` directory, `public/` static folder
+6. Mount `authRoutes`, `adminRoutes`, `tenantRoutes`
+7. `app.listen(...)`
+
+---
+
+## 11. Verification Plan
+
+### Automated
+- Confirm `Admin`, `Tenant`, `Otp`, `Room` schemas compile and connect to the Atlas `womens-pg` DB.
+- Confirm `sendOtp`'s upsert refreshes `createdAt`/`expiresAt` on a second call for the same `email`+`purpose`.
+- Confirm `verifyOtp`'s query rejects a code whose `expiresAt` has passed, even before the TTL sweep would remove it.
+- Confirm `node app.js` starts cleanly: Mongoose connects, session store initializes, both Passport strategies register, all three route files mount without error.
+
+### Manual
+1. **Tenant OTP login (room-matched):** log in with an email present in the seeded `room-data`; confirm a `Tenant` document is created/linked with the correct `roomNumber`/`tenantId`, and `/tenant/room` shows the correct live rent/status.
+2. **Tenant OTP login (unmatched):** log in with an email not present in any room; confirm a bare `Tenant` document is created and `/tenant/room` shows "No Room Assigned".
+3. **Repeat OTP login:** log in with the same tenant email twice in a row; confirm the second attempt logs in cleanly with no duplicate-key error.
+4. **OTP resend/cooldown:** request an OTP, then request again within 60 seconds; confirm the cooldown error appears and no second email is sent. Wait past 60 seconds and confirm a resend succeeds.
+5. **Expired OTP:** attempt to verify a code after its 5-minute expiry; confirm it's rejected as invalid, even if the TTL sweep hasn't run yet.
+6. **Admin login, allowlisted:** log in (OTP or Google) with an email in `ADMIN_EMAILS`; confirm access to `/admin/dashboard`.
+7. **Admin login, not allowlisted:** attempt login with an email not in `ADMIN_EMAILS`; confirm rejection and no `Admin` document is created.
+8. **Dual login methods:** log in once via OTP, then again via Google using the same email; confirm the existing document is updated with `googleId` (no duplicate, no crash).
+9. **Google OAuth tenant session:** log in via Google as a room-assigned tenant; confirm `/tenant/room` renders live room details correctly (validates `tenantId`/`roomNumber` are present on the session, not just `role`).
+10. **Route protection:** confirm a guest hitting `/admin/dashboard` or `/dashboard` is redirected to the appropriate login page; confirm a logged-in tenant hitting `/admin/dashboard` is denied.
+11. **Session persistence:** restart the Node process while logged in; confirm the session remains valid via the MongoDB-backed store.

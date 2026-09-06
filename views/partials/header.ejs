@@ -1,0 +1,41 @@
+<header class="navbar">
+  <div class="nav-container">
+    <a href="<%= user ? (user.role === 'admin' ? '/admin/dashboard' : '/tenant/profile') : '/' %>" class="brand-logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Pujyasritha's Living
+    </a>
+
+    <% if (typeof hideNavLinks === 'undefined' || !hideNavLinks) { %>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle Navigation">
+        &#9776;
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <% if (!user) { %>
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/login" class="nav-link">Tenant Login</a></li>
+          <li><a href="/admin/login" class="nav-link">Admin Login</a></li>
+        <% } else if (user.role === 'admin') { %>
+          <li><a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+          <li><a href="/admin/rooms" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'rooms' ? 'active' : '' %>">Rooms</a></li>
+          <li><a href="/admin/tenants" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'tenants' ? 'active' : '' %>">Tenants</a></li>
+          <li><a href="/auth/logout" class="nav-link btn-logout">Logout</a></li>
+        <% } else if (user.role === 'tenant') { %>
+          <li><span class="nav-link" style="font-weight: 600; color: var(--primary);">Hi, <%= user.username %></span></li>
+          <li><a href="/tenant/profile" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'profile' ? 'active' : '' %>">Profile</a></li>
+          <li><a href="/tenant/room" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'room' ? 'active' : '' %>">My Room</a></li>
+          <li><a href="/tenant/complaints" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'complaints' ? 'active' : '' %>">Complaints</a></li>
+          <li><a href="/auth/logout" class="nav-link btn-logout">Logout</a></li>
+        <% } %>
+      </ul>
+    <% } %>
+  </div>
+</header>
+
+<% if (typeof hideNavLinks === 'undefined' || !hideNavLinks) { %>
+  <script>
+    document.getElementById('hamburgerBtn')?.addEventListener('click', function() {
+      document.getElementById('navLinks')?.classList.toggle('active');
+    });
+  </script>
+<% } %>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allot New Resident — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Allot New Resident to Room</h1>
+          <p style="color: var(--text-muted);">Enter resident details and assign a vacant or partially occupied PG room.</p>
+        </div>
+        <a href="/admin/rooms" class="btn btn-outline" style="width: auto;">&larr; Back to Rooms</a>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <div class="card" style="max-width: 750px;">
+        <form action="/admin/tenants/new" method="POST" id="addTenantForm">
+          
+          <!-- Room Allotment Section -->
+          <div style="background: rgba(108, 99, 255, 0.05); border: 1px solid rgba(108, 99, 255, 0.2); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem;">
+            <h3 style="color: var(--primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Step 1: Select Room & Sharing Type
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+              <!-- Sharing Type Filter -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="sharingFilter">Filter Room Type (Sharing)</label>
+                <select id="sharingFilter" class="form-control">
+                  <option value="all">All Sharing Types</option>
+                  <option value="1">1 Sharing Room</option>
+                  <option value="2">2 Sharing Room</option>
+                  <option value="3">3 Sharing Room</option>
+                  <option value="4">4 Sharing Room</option>
+                </select>
+              </div>
+
+              <!-- Available Room Selection -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="roomNumber">Available Room *</label>
+                <select id="roomNumber" name="roomNumber" class="form-control" required>
+                  <option value="">-- Select Vacant / Partial Room --</option>
+                  <% if (availableRooms && availableRooms.length > 0) { %>
+                    <% availableRooms.forEach(r => { %>
+                      <% 
+                        const filled = r.tenants ? r.tenants.length : 0;
+                        const statusLabel = r.status === 'Vacant' ? 'Vacant' : `Partially Occupied (${filled}/${r.capacity})`;
+                      %>
+                      <option 
+                        value="<%= r.roomNumber %>" 
+                        data-sharing="<%= r.sharingType %>"
+                        data-rent="<%= r.rent %>"
+                        data-advance="<%= r.advance %>"
+                      >
+                        Room <%= r.roomNumber %> — <%= r.sharingType %> Sharing (<%= statusLabel %>) — ₹<%= r.rent.toLocaleString('en-IN') %>/mo
+                      </option>
+                    <% }); %>
+                  <% } else { %>
+                    <option value="" disabled>No vacant or partially occupied rooms available</option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resident Details Section -->
+          <h3 style="margin-bottom: 1rem;">Step 2: Resident Personal Details</h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+              <label for="name">Resident Full Name *</label>
+              <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Ananya Sharma" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address * (For Resident Login)</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="resident@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number *</label>
+              <input type="tel" id="phone" name="phone" class="form-control" placeholder="9876543210" required>
+            </div>
+
+            <div class="form-group">
+              <label for="age">Age</label>
+              <input type="number" id="age" name="age" class="form-control" placeholder="22" min="16" max="90">
+            </div>
+
+            <div class="form-group">
+              <label for="gender">Gender</label>
+              <select id="gender" name="gender" class="form-control">
+                <option value="Female" selected>Female</option>
+                <option value="Male">Male</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="joiningDate">Joining Date</label>
+              <input type="date" id="joiningDate" name="joiningDate" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+
+            <div class="form-group">
+              <label for="rent">Monthly Rent (₹)</label>
+              <input type="number" id="rent" name="rent" class="form-control" placeholder="7500">
+            </div>
+
+            <div class="form-group">
+              <label for="advancePaid">Advance Deposit Paid (₹)</label>
+              <input type="number" id="advancePaid" name="advancePaid" class="form-control" placeholder="15000">
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.85rem;">
+              + Allot Room & Save Resident
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+  <!-- Dynamic Room Auto-Fill & Filter Script -->
+  <script>
+    const roomSelect = document.getElementById('roomNumber');
+    const sharingFilter = document.getElementById('sharingFilter');
+    const rentInput = document.getElementById('rent');
+    const advanceInput = document.getElementById('advancePaid');
+
+    // Auto fill Rent and Advance when room is selected
+    roomSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      if (selectedOption && selectedOption.dataset.rent) {
+        rentInput.value = selectedOption.dataset.rent;
+        advanceInput.value = selectedOption.dataset.advance;
+      }
+    });
+
+    // Dynamic sharing filter
+    sharingFilter.addEventListener('change', function() {
+      const filterVal = this.value;
+      const options = roomSelect.options;
+
+      for (let i = 1; i < options.length; i++) {
+        const opt = options[i];
+        const sharing = opt.dataset.sharing;
+        if (filterVal === 'all' || sharing === filterVal) {
+          opt.style.display = '';
+        } else {
+          opt.style.display = 'none';
+        }
+      }
+      roomSelect.selectedIndex = 0;
+    });
+  </script>
+</body>
+</html>

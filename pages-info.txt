@@ -1,0 +1,325 @@
+================================================================================
+          PUJYASRITHA'S LIVING — COMPLETE PAGE & DESIGN SPECIFICATIONS
+================================================================================
+File Created: pages-info.txt
+Project: Pujyasritha's Living (Women's PG Residence Management Web Application)
+Framework & Technologies: Node.js, Express, EJS, MongoDB (Mongoose), Tailwind CSS v4
+
+--------------------------------------------------------------------------------
+SECTION 1: GLOBAL DESIGN SYSTEM & TOKENS
+--------------------------------------------------------------------------------
+
+1. COLOR PALETTE & TOKENS (CSS Variables defined in src/input.css)
+   - Primary Accent: #6C63FF (Indigo Violet) — Used for primary buttons, active links, brand logos, active icons.
+   - Primary Hover: #5A52E0 (Darker Indigo) — Used on primary button hover states.
+   - Page Background: #F5F6FA (Off-white / Slate Tint) — Used as the body background for all app pages.
+   - Surface / Card Background: #FFFFFF (Stark White) — Used for cards, sidebars, headers, form containers.
+   - Text Primary (Dark): #2F2F2F (Charcoal Near-Black) — High contrast text for titles, labels, inputs, table body.
+   - Text Muted: #6C757D (Medium Slate Gray) — Subtitles, metadata, table headers, placeholder text.
+   - Border Color: #E2E8F0 (Light Gray Hairline) — Card borders, divider lines, table row borders, form input borders.
+
+   - Status Badges & Alerts Palette:
+     * Success / Paid / Active / Occupied:
+       - Fills: rgba(34, 197, 94, 0.15) (Light Emerald Green fill)
+       - Text Color: #15803D (Dark Green text)
+     * Danger / Vacant / Pending / Destructive:
+       - Fills: rgba(239, 68, 68, 0.15) (Light Crimson Red fill)
+       - Text Color: #B91C1C (Dark Red text)
+     * Warning / Partial / Raised:
+       - Fills: rgba(245, 158, 11, 0.15) (Light Amber Yellow fill)
+       - Text Color: #B45309 (Dark Amber text)
+     * Brand Purple Badge (Room Numbers / Badges):
+       - Fills: rgba(108, 99, 255, 0.15) (Light Indigo fill)
+       - Text Color: #6C63FF (Primary Indigo text)
+
+2. TYPOGRAPHY SYSTEM
+   - Font Families:
+     * Headings (h1, h2, h3, h4, h5, h6, brand logos): 'Poppins', 'Inter', sans-serif
+     * Navigation, Buttons, Badges, Labels: 'Inter', sans-serif
+     * Body Text, Paragraphs, Descriptions: 'Roboto', 'Open Sans', sans-serif
+   - Font Hierarchy & Scale:
+     * Hero / Page Main Title (h1): 1.75rem (28px), Weight: 600, Margin-bottom: 0.75rem, Line-height: 1.3
+     * Section Header (h2): 1.35rem (21.6px), Weight: 600, Margin-bottom: 0.5rem
+     * Subheader / Card Title (h3): 1.1rem (17.6px), Weight: 600
+     * Body Text: 0.95rem (15.2px), Weight: 400, Line-height: 1.6
+     * Form Labels: 0.85rem (13.6px), Weight: 600, Margin-bottom: 0.4rem
+     * Table Headers (th): 0.8rem (12.8px), Weight: 600, Uppercase, Text Color: #6C757D
+     * Badges: 0.8rem (12.8px), Weight: 600, Capitalized
+     * Metadata & Timestamps: 0.8rem - 0.85rem, Text Color: #6C757D
+
+3. SHADOWS, BORDER RADII & SPACING
+   - Border Radius:
+     * Containers & Cards (.card, .auth-card, .sidebar): 10px (var(--radius))
+     * Buttons (.btn): 8px
+     * Inputs (.form-control): 8px
+     * Status Badges (.badge): 50px (Pill shape)
+     * Image Thumbnails: 8px
+   - Box Shadows:
+     * Small Shadow (--shadow-sm): 0 2px 4px rgba(0, 0, 0, 0.05)
+     * Medium Shadow (--shadow-md): 0 4px 12px rgba(108, 99, 255, 0.08)
+     * Large Shadow (--shadow-lg): 0 8px 24px rgba(0, 0, 0, 0.1)
+
+--------------------------------------------------------------------------------
+SECTION 2: SHARED LAYOUT & NAVIGATION COMPONENTS
+--------------------------------------------------------------------------------
+
+1. HEADER & NAVBAR (views/partials/header.ejs)
+   - Route Scope: Shared across all pages (sticky top header)
+   - Layout: Flexbox, full width, height ~64px, Sticky position (top: 0, z-index: 100)
+   - Colors: Background #FFFFFF, Bottom Border #E2E8F0 (1px solid), Shadow: 0 2px 4px rgba(0,0,0,0.05)
+   - Brand Logo: Font 'Poppins', 1.3rem (20.8px), Weight 700, Color #6C63FF. Home SVG Icon (24x24)
+   - Navigation Items (Resident / Admin Session Dependent):
+     * Links: Font 'Inter', 0.95rem, Weight 500, Color #2F2F2F, Padding: 0.4rem 0.8rem, Border-radius: 6px
+     * Hover State: Background rgba(108, 99, 255, 0.08), Text Color #6C63FF
+     * Logout Button (.btn-logout): Text Color #EF4444, Hover Background rgba(239, 68, 68, 0.08)
+   - Mobile Responsiveness: Hamburger icon button (display: none on desktop, visible below 768px). Toggles absolute full-width dropdown menu with shadow.
+
+2. SIDEBAR NAVIGATION (views/partials/sidebar.ejs)
+   - Route Scope: Present on all Admin pages & Dashboard
+   - Layout: Fixed width 240px desktop side panel, Height: fit-content, Margin-right: 1.5rem
+   - Colors: Background #FFFFFF, Border #E2E8F0 (1px solid), Radius: 10px, Shadow: 0 2px 4px rgba(0,0,0,0.05)
+   - Section Title: 'ADMIN MANAGEMENT', Font-size: 0.85rem, Uppercase, Color #6C757D, Letter-spacing: 0.05em
+   - Menu Items:
+     * Font 'Inter', 0.95rem, Weight 500, Padding: 0.6rem 0.8rem, Border-radius: 6px
+     * Icons: Inline SVG icons (20x20) per menu item (Dashboard, Rooms, Tenants, Allot Resident, Complaints, Payments, Remove Tenant)
+     * Active & Hover State: Background rgba(108, 99, 255, 0.1), Color #6C63FF
+
+3. FOOTER (views/partials/footer.ejs)
+   - Route Scope: Bottom of all pages
+   - Layout: Full width, Padding: 1.25rem, Centered text
+   - Colors: Background #FFFFFF, Top Border #E2E8F0, Font-size: 0.85rem, Text Color #6C757D
+   - Text Content: "© 2026 Pujyasritha's Living. All rights reserved."
+
+--------------------------------------------------------------------------------
+SECTION 3: PUBLIC & AUTHENTICATION PAGES
+--------------------------------------------------------------------------------
+
+1. LANDING PAGE (views/index.ejs)
+   - Route: GET /
+   - Purpose: Public entrance split into Resident Portal and Admin Management sections.
+   - Layout & Structure:
+     * Header logo at top
+     * Hero Grid: 2 equal cards side-by-side on desktop (grid-cols-2), stacked on mobile (grid-cols-1), gap 1.5rem, max-width 900px centered
+   - Resident Card:
+     * Card Background: #FFFFFF, Border #E2E8F0, Radius 10px, Padding 2rem
+     * Icon: Home Icon in circles (rgba(108, 99, 255, 0.15) fill)
+     * Title: "Resident Portal", Font 'Poppins', 1.5rem, Color #2F2F2F
+     * Buttons: Primary Log In (Solid #6C63FF button) & New Resident Register (Outlined #6C63FF button)
+   - Admin Card:
+     * Card Background: #FFFFFF, Border #E2E8F0, Radius 10px, Padding 2rem
+     * Icon: Shield Admin Icon
+     * Title: "PG Management", Font 'Poppins', 1.5rem
+     * Buttons: Solid Charcoal Admin Log In (#2F2F2F background, #FFFFFF text) & Outlined Admin Register (#2F2F2F border & text)
+
+2. RESIDENT LOGIN PAGE (views/auth/login.ejs)
+   - Route: GET /login | POST /login
+   - Purpose: Allows tenants to log in using username or email + password.
+   - Container: .auth-wrapper (centered vertically & horizontally), .auth-card (max-width 420px, background #FFFFFF, radius 10px, shadow 0 8px 24px rgba(0,0,0,0.1))
+   - Header: "Resident Login" (1.6rem) + Subtitle "Enter your resident username and password" (0.9rem muted)
+   - Form Inputs:
+     * Input Username/Email: height ~42px, padding 0.7rem 0.9rem, border 1px solid #E2E8F0, focus ring #6C63FF
+     * Password Field with Eye Icon toggle button (absolute positioned right 0.75rem)
+   - Buttons:
+     * Primary Submit Button: "Log In", solid #6C63FF, 100% width, height ~42px
+     * Google Sign In Button: White button with border #E2E8F0, Google 4-color SVG logo, text "Continue with Google"
+   - Footer Link: "Don't have an account? Register here" (#6C63FF link)
+
+3. ADMIN LOGIN PAGE (views/auth/admin-login.ejs)
+   - Route: GET /admin/login | POST /admin/login
+   - Purpose: Secure login for PG administrators.
+   - Container: .auth-card (max-width 420px)
+   - Header: "Admin Login" + Subtitle "Enter your administrator credentials"
+   - Form Inputs: Same as resident login, autofocus on username input
+   - Buttons:
+     * Primary Submit: "Log In as Admin", solid #2F2F2F (Dark Charcoal fill, #FFFFFF text)
+     * Admin Google Sign In: "Admin Sign In with Google"
+   - Footer Link: "Need an admin account? Register here"
+
+4. RESIDENT REGISTRATION PAGE (views/auth/register.ejs)
+   - Route: GET /register | POST /register
+   - Purpose: Allows new tenants to register an account and trigger an email OTP verification code.
+   - Form Fields: Email Address, Username, Password (min 8 chars with toggle), Confirm Password (min 8 chars with toggle)
+   - Primary Button: "Send Email OTP Code" (#6C63FF fill, height ~42px)
+
+5. ADMIN REGISTRATION PAGE (views/auth/admin-register.ejs)
+   - Route: GET /admin/register | POST /admin/register
+   - Purpose: Registration form for new administrative staff.
+   - Form Fields: Authorized Email Address, Username, Password, Confirm Password
+   - Primary Button: "Send Admin OTP Code" (#2F2F2F fill, #FFFFFF text)
+
+6. EMAIL OTP VERIFICATION PAGE (views/auth/verify-otp.ejs)
+   - Route: GET /auth/verify-otp | POST /auth/verify-otp
+   - Purpose: Verifies 6-digit registration code sent to user's email.
+   - Card Size: max-width 420px
+   - OTP Input Box:
+     * Font-size: 1.4rem, Letter-spacing: 6px, Text-align: center, Maxlength: 6, Pattern: \d{6}
+   - Countdown Timer: "Code expires in 05:00" (Font 0.85rem muted, dynamic JavaScript countdown timer)
+   - Buttons: Submit "Verify Email & Complete Registration" + Outlined "Resend Code" button
+
+--------------------------------------------------------------------------------
+SECTION 4: ADMIN MANAGEMENT PAGES
+--------------------------------------------------------------------------------
+
+1. ADMIN DASHBOARD (views/admin/dashboard.ejs)
+   - Route: GET /admin/dashboard
+   - Purpose: High-level overview of property metrics, room capacity, and active residents.
+   - Metrics Grid (.metric-grid): 4 stat cards in responsive grid (minmax 220px)
+     * Metric 1: Total Rooms — Value 1.8rem bold #6C63FF
+     * Metric 2: Total Residents — Value 1.8rem bold #6C63FF
+     * Metric 3: Occupied Rooms — Value 1.8rem bold #22C55E (Green text)
+     * Metric 4: Vacant Rooms — Value 1.8rem bold #F59E0B (Amber text)
+   - Room Capacity Overview Table Card (.card):
+     * Table Header (th): Room No, Sharing, Rent (₹), Advance (₹), Capacity, Occupants, Status
+     * Status Badges: Occupied (Green pill badge), Vacant (Yellow pill badge), Partial (Purple badge)
+
+2. ROOMS DIRECTORY PAGE (views/admin/rooms.ejs)
+   - Route: GET /admin/rooms
+   - Purpose: Complete directory of all PG rooms, capacity, and current room occupants.
+   - Top Header Bar: Page Title "Rooms Overview" + Action Button "+ Add New Resident" (#6C63FF button)
+   - Table Card: Responsive table container with light gray borders (#E2E8F0)
+   - Data Columns: Room No (Bold text), Sharing Type (1/2/3/4 sharing), Monthly Rent (₹ formatted with en-IN commas), Advance Required (₹), Capacity (e.g. 2 beds), Current Occupants (Bullet list of names & phone numbers), Status Badge
+
+3. TENANTS DIRECTORY PAGE (views/admin/tenants.ejs)
+   - Route: GET /admin/tenants
+   - Purpose: List of all active residents assigned to rooms in the hostel.
+   - Top Header Bar: Title "Tenants Directory" + "+ Add New Resident" button
+   - Data Columns: Tenant ID (e.g. TNT1001), Full Name, Room Badge ("Room 101" purple badge), Phone Number, Email Address, Joining Date (DD/MM/YYYY format), Monthly Rent (₹), Advance Paid (₹), Status ("Active" green badge)
+
+4. ALLOT NEW RESIDENT / ADD TENANT PAGE (views/admin/add-tenant.ejs)
+   - Route: GET /admin/tenants/new | POST /admin/tenants/new
+   - Purpose: Form to register a resident and assign them to a vacant or partially occupied room.
+   - Form Container: max-width 750px card
+   - Section 1 (Room Allotment):
+     * Background: rgba(108, 99, 255, 0.05) purple tint box with 1px border rgba(108, 99, 255, 0.2)
+     * Sharing Filter Dropdown: Filter by All, 1, 2, 3, or 4 Sharing
+     * Room Dropdown: Displays vacant/partial rooms with live rent & advance data attributes
+     * Dynamic JS: Auto-fills Rent and Advance inputs upon room selection
+   - Section 2 (Resident Details Grid):
+     * Grid 2 columns (minmax 220px)
+     * Inputs: Resident Name, Email, Phone, Age, Gender (Female default dropdown), Joining Date (date picker default today), Rent (₹), Advance Paid (₹)
+   - Submit Button: "+ Allot Room & Save Resident" (Full width #6C63FF button)
+
+5. RESIDENT COMPLAINTS DIRECTORY (views/admin/complaints.ejs)
+   - Route: GET /admin/complaints | POST /admin/complaints/:id/resolve
+   - Purpose: Inspect resident-submitted maintenance issues, photo evidence, and submit resolution notes.
+   - Complaint Cards Stack:
+     * Raised Card Border: 5px solid left border #F59E0B (Amber)
+     * Resolved Card Border: 5px solid left border #22C55E (Green)
+     * Resident Details Header: Room No, Tenant Name, Phone, Email, Raised Timestamp
+     * Description Box: White-space pre-wrap problem description
+     * Uploaded Evidence Thumbnail: max-width 220px, max-height 160px, rounded corners 8px, opens full image in new tab on click
+   - Resolution Form Box (for Raised issues):
+     * Tinted Form Container: rgba(108, 99, 255, 0.05) fill
+     * Textarea: Resolution Description / Action Taken (required)
+     * File Input: Upload Resolution Photo Evidence (Max 5MB)
+     * Resolve Button: Green solid button (#22C55E fill, #FFFFFF text, padding 0.65rem 1.5rem)
+
+6. RENT PAYMENTS OVERVIEW (views/admin/payments.ejs)
+   - Route: GET /admin/payments | POST /admin/payments/:tenantId/update | GET /admin/payments/export
+   - Purpose: Track monthly rent collection status, record manual payment status updates, and download CSV reports.
+   - Header Controls:
+     * Month Selector Dropdown: Select current month or past 11 months (auto-submits form on change)
+     * CSV Download Button: Outlined button with Download SVG icon
+   - Summary Cards (3 Metric Cards):
+     * Total Expected Rent: ₹ Total
+     * Total Collected: ₹ Total (Green text #22C55E)
+     * Pending Amount: ₹ Total (Red text #EF4444)
+   - Payments Table:
+     * Data Columns: Resident Details (Name + Tenant ID), Room, Monthly Rent, Amount Paid (Color-coded text), Status Badge (Paid = Green badge, Partial = Yellow badge, Pending = Red badge), Last Payment Date & Updated By Admin Email, Quick Action Inline Status Form
+     * Action Dropdown: Select Paid / Partial / Pending status + Save button. Selecting 'Partial' triggers a JS prompt asking for partial payment amount (₹1 to ₹Rent-1)
+
+7. REMOVE RESIDENT SELECTION PAGE (views/admin/remove-tenant.ejs)
+   - Route: GET /admin/remove-tenant | POST /admin/tenants/:tenantId/request-removal
+   - Purpose: Cascading dropdown interface to select an active resident and send a 6-digit removal OTP to their email.
+   - Container: max-width 750px card
+   - Destructive Warning Box:
+     * Background: rgba(239, 68, 68, 0.05) light red fill, Border: 1px solid rgba(239, 68, 68, 0.2), Header: Red text #B91C1C with Warning Shield SVG
+     * Warning Text: "Initiating removal emails a 6-digit verification OTP to the resident. You must enter the OTP on the next screen to finalize removal."
+   - Cascading Form Controls:
+     * Step 1 Dropdown: Select Sharing Type (1, 2, 3, 4 sharing)
+     * Step 2 Dropdown (Cascading): Select Room Number (enabled after step 1)
+     * Step 3 Dropdown (Cascading): Select Resident to Remove (enabled after step 2)
+   - Submit Button: Red solid button (#EF4444 fill, text "Send Removal OTP to Resident", disabled & 0.6 opacity until resident selected)
+
+8. VERIFY REMOVAL OTP PAGE (views/admin/verify-removal-otp.ejs)
+   - Route: POST /admin/remove-tenant/verify
+   - Purpose: Admin enters the 6-digit OTP received by the resident to confirm tenant removal.
+   - Container: max-width 600px card centered
+   - Details Card Box:
+     * Background: rgba(108, 99, 255, 0.08) purple fill
+     * Resident Name, Email Address, Room Number
+   - Form Controls:
+     * OTP Code Input: 6-digit pattern, text-align center, letter-spacing 4px, font-size 1.2rem
+   - Action Buttons:
+     * Submit: Solid Red Button (#EF4444 fill, text "Verify OTP & Complete Removal")
+     * Cancel Button: Outlined button returning to removal selection
+
+--------------------------------------------------------------------------------
+SECTION 5: TENANT / RESIDENT PAGES
+--------------------------------------------------------------------------------
+
+1. RESIDENT PROFILE & DASHBOARD (views/tenant/profile.ejs)
+   - Route: GET /tenant/profile
+   - Purpose: Resident's personal dashboard displaying assigned room, rent due status, and payment button.
+   - Container Size: max-width 900px centered
+   - Profile Header Card:
+     * Avatar Circle: 64x64px, 50% radius, rgba(108, 99, 255, 0.15) fill, bold initial letter in #6C63FF
+     * Resident Name & Username (@username & email)
+   - Monthly Rent Payment Status Banner Card:
+     * Card Background: Gradient linear-gradient(135deg, rgba(108, 99, 255, 0.05) 0%, #FFFFFF 100%), border rgba(108, 99, 255, 0.2)
+     * Status Display:
+       - Paid State: Green Checkmark SVG + "Rent Paid (₹Amount)" green text #22C55E + Green Pill Badge "✔ Paid for YYYY-MM"
+       - Partial State: Yellow Text #CA8A04 + "Partially Paid (₹Amount paid)" + "Pay Remaining Rent (₹Balance)" yellow button (#EAB308)
+       - Pending State: Red Text #EF4444 + "Rent Payment Pending (₹Amount)" + "Pay Rent (₹Amount)" solid purple button (#6C63FF)
+   - Metrics Grid: 3 Cards (Assigned Room, Monthly Rent ₹, Advance Deposit Paid ₹)
+   - Occupancy Summary Card: Tenant ID, Phone Number, Joining Date, Active Resident Badge
+
+2. MY ROOM & ROOMMATES PAGE (views/tenant/room.ejs)
+   - Route: GET /tenant/room
+   - Purpose: Detailed room info and list of co-residents / roommates.
+   - Container Size: max-width 900px
+   - Metric Grid: Room Number, Sharing Type, Rent (₹), Advance (₹)
+   - Roommates Table: List of roommates sharing the room (Name & Active status badge)
+   - Unassigned Fallback Card (if resident not allotted to room yet):
+     * Large House Icon (48x48px stroke #6C63FF)
+     * Title: "No Room Assigned Yet"
+     * Description: Instructions to contact PG manager for allocation
+     * Badge: "Status: Account Registered (Unassigned)" (Purple pill badge)
+
+3. RESIDENT COMPLAINTS PAGE (views/tenant/complaints.ejs)
+   - Route: GET /tenant/complaints | POST /tenant/complaints
+   - Purpose: Allows tenants to report room issues with description + photo upload, and view resolution history.
+   - Form Card:
+     * Header: "Raise a New Complaint (Room 101)"
+     * Textarea: Problem Description (required, rows: 4)
+     * File Input: Attach Photo Evidence (Optional, max 5MB, accepts jpeg/png/webp)
+     * Submit Button: "Submit Complaint" (#6C63FF button, width auto, padding 0.75rem 2rem)
+   - Active Complaints Stack:
+     * Yellow left border #F59E0B, status badge "Status: Raised", timestamp, description, attached photo thumbnail
+   - Resolved Complaints Stack:
+     * Green left border #22C55E, status badge "Status: Resolved", timestamp, original request description
+     * Management Resolution Note Box: Light green dashed box (rgba(34, 197, 94, 0.08) fill, border 1px dashed rgba(34, 197, 94, 0.3)), green text #15803D, admin resolution note, resolution photo evidence thumbnail
+
+--------------------------------------------------------------------------------
+SECTION 6: SUMMARY TABLE OF COMPONENT SIZES & DESIGN RULES
+--------------------------------------------------------------------------------
+
+Component              | Width / Height / Size          | Color / Fill Tokens           | Font Style / Weight
+-----------------------|--------------------------------|-------------------------------|------------------------
+Page Body              | Min-height 100vh               | #F5F6FA (var(--bg-section))   | Roboto / Open Sans 400
+Navbar Header          | Height ~64px, Sticky top       | #FFFFFF, Border #E2E8F0       | Poppins 700 (Logo)
+Sidebar Panel          | Width 240px                    | #FFFFFF, Border #E2E8F0       | Inter 500
+Standard Card          | Padding 1.25rem 1.5rem         | #FFFFFF, Border #E2E8F0       | Radius 10px
+Auth Card              | Max-width 420px                | #FFFFFF, Shadow 0 8px 24px    | Radius 10px
+Metric Card            | Grid minmax(220px, 1fr)        | #FFFFFF, Border #E2E8F0       | Stat Value 1.8rem 700
+Primary Button         | Height ~42px, Padding 0.65rem | Background #6C63FF            | Inter 600, Radius 8px
+Dark Admin Button      | Height ~42px, Padding 0.65rem | Background #2F2F2F            | Inter 600, Radius 8px
+Destructive Button     | Height ~42px, Padding 0.65rem | Background #EF4444            | Inter 600, Radius 8px
+Form Controls          | Height ~42px, Padding 0.7rem  | #FFFFFF, Border #E2E8F0       | Focus Ring rgba(108,99,255)
+Status Badges          | Height ~24px, Padding 0.25x0.6 | Green/Yellow/Red Tint Fills   | Pill Radius 50px, 0.8rem
+Data Table Header      | Padding 0.85rem 1rem           | Background #F5F6FA            | Uppercase 0.8rem 600
+Table Body Rows        | Padding 0.85rem 1rem           | Hover rgba(245, 246, 250, 0.5)| Border Bottom #E2E8F0
+
+================================================================================
+                            END OF DOCUMENTATION
+================================================================================

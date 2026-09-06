@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenants Directory — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Tenants Directory</h1>
+          <p style="color: var(--text-muted);">Directory of active residents and allotted rooms</p>
+        </div>
+        <a href="/admin/tenants/new" class="btn btn-primary" style="width: auto;">+ Add New Resident</a>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Room</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Joining Date</th>
+                <th>Monthly Rent</th>
+                <th>Advance Paid</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (tenants && tenants.length > 0) { %>
+                <% tenants.forEach(t => { %>
+                  <tr>
+                    <td><strong><%= t.tenantId %></strong></td>
+                    <td><%= t.name %></td>
+                    <td><span class="badge badge-purple">Room <%= t.roomNumber %></span></td>
+                    <td><%= t.phone %></td>
+                    <td><%= t.email || 'N/A' %></td>
+                    <td><%= t.joiningDate ? new Date(t.joiningDate).toLocaleDateString('en-IN') : 'N/A' %></td>
+                    <td>₹<%= (t.rent || 0).toLocaleString('en-IN') %></td>
+                    <td>₹<%= (t.advancePaid || 0).toLocaleString('en-IN') %></td>
+                    <td><span class="badge badge-green"><%= t.status || 'Active' %></span></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No tenants found.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>
