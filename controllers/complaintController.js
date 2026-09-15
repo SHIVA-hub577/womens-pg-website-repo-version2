@@ -100,6 +100,81 @@ const createTenantComplaint = async (req, res) => {
       status: 'Raised'
     });
 
+    // Send Automatic Email Notification to Admin
+    const adminEmails = process.env.ADMIN_EMAILS || process.env.GOOGLEUSER;
+    if (adminEmails) {
+      const tenantName = user.name || user.username || 'Resident';
+      const tenantEmail = user.email || 'N/A';
+      const subject = `🚨 New Complaint Raised - Room ${roomNumber} (${tenantName})`;
+      const text = `A new complaint has been filed by ${tenantName} (Room ${roomNumber}, ID: ${tenantId}).\n\nDescription: ${description.trim()}`;
+
+      const attachments = [];
+      let imageHtml = '<p style="color: #777; font-style: italic;">No photo attached with this complaint.</p>';
+
+      if (req.file) {
+        attachments.push({
+          filename: req.file.filename,
+          path: req.file.path,
+          cid: 'complaint_photo'
+        });
+        imageHtml = `
+          <div style="margin-top: 15px;">
+            <p style="font-weight: bold; margin-bottom: 5px; color: #333;">Attached Complaint Photo:</p>
+            <img src="cid:complaint_photo" alt="Complaint Photo" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #ddd;" />
+          </div>
+        `;
+      }
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #fafafa;">
+          <h2 style="color: #d9534f; margin-top: 0;">🚨 New Tenant Complaint Raised</h2>
+          <p>A new maintenance complaint has been submitted in the portal:</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #ffffff; border: 1px solid #eee; border-radius: 6px;">
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; width: 40%;">Resident Name:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${tenantName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Resident Email:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${tenantEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Tenant ID:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${tenantId}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Room Number:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">Room ${roomNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">Date Raised:</td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${new Date().toLocaleString()}</td>
+            </tr>
+          </table>
+
+          <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-left: 4px solid #d9534f; border-radius: 4px; border: 1px solid #eee; border-left-width: 4px;">
+            <p style="margin: 0; font-weight: bold; color: #555;">Complaint Description:</p>
+            <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.5;">${description.trim()}</p>
+          </div>
+
+          ${imageHtml}
+
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #888; margin: 0; text-align: center;">
+            Pujyasritha's Living Management System Notification
+          </p>
+        </div>
+      `;
+
+      try {
+        await sendEmail(adminEmails, subject, text, html, attachments);
+        console.log(`📧 Complaint alert email successfully sent to admin (${adminEmails})`);
+      } catch (emailErr) {
+        console.warn('⚠️ Could not send complaint alert email to admin:', emailErr.message);
+      }
+    }
+
     return res.redirect('/tenant/complaints?success=Complaint submitted successfully!');
   } catch (error) {
     console.error('Error in createTenantComplaint:', error);

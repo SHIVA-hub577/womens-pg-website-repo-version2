@@ -135,7 +135,12 @@ const sendRegistrationOtp = async (req, res) => {
       </div>
     `;
 
-    await sendEmail(cleanEmail, subject, text, html);
+    try {
+      await sendEmail(cleanEmail, subject, text, html);
+    } catch (emailErr) {
+      console.warn(`⚠️ Could not send email via SMTP (Server down/OAuth expired).`);
+      console.warn(`🔑 [DEV VERIFICATION CODE] OTP for ${cleanEmail} (${roleTitle}): ${code}`);
+    }
 
     return res.render('auth/verify-otp', { email: cleanEmail, purpose, error: null });
   } catch (error) {
