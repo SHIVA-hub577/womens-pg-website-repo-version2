@@ -6,94 +6,816 @@
   <title>Welcome — Pujyasritha's Living Women's PG</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    .landing-wrapper {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
+    /* Ambient Glow Background & Animations */
+    .landing-hero-wrapper {
+      position: relative;
+      padding: 3rem 1.5rem 2rem 1.5rem;
+      max-width: 1240px;
+      margin: 0 auto;
       text-align: center;
+      overflow: hidden;
     }
-    .landing-hero {
-      margin-bottom: 2.5rem;
-    }
-    .landing-hero h1 {
-      font-size: 2.2rem;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-    }
-    .landing-hero p {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-    }
-    .portal-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-    .portal-card {
-      background: var(--bg-white);
-      border-radius: var(--radius);
-      padding: 2rem;
-      border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-sm);
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .portal-card:hover {
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
-    .portal-icon {
-      width: 56px;
-      height: 56px;
+
+    .hero-ambient-glow {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(107, 37, 69, 0.15) 0%, rgba(242, 226, 255, 0.4) 50%, rgba(255, 247, 255, 0) 70%);
       border-radius: 50%;
-      background: rgba(108, 99, 255, 0.1);
+      filter: blur(40px);
+      z-index: 0;
+      pointer-events: none;
+      animation: floatGlow 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatGlow {
+      0% { transform: translateX(-50%) translateY(0) scale(1); }
+      100% { transform: translateX(-50%) translateY(20px) scale(1.08); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .hero-badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(107, 37, 69, 0.2);
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary);
+      box-shadow: 0 4px 14px rgba(107, 37, 69, 0.08);
+      margin-bottom: 1.25rem;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .hero-badge-tag .sparkle {
+      color: #d79f62;
+    }
+
+    .hero-title {
+      font-family: 'Literata', serif;
+      font-size: 3.2rem;
+      line-height: 1.15;
+      font-weight: 700;
+      background: linear-gradient(135deg, #4f0e2f 0%, #752d4d 50%, #946927 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      animation: fadeInUp 0.75s ease-out;
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.9s ease-out;
+    }
+
+    /* Key Stats Bar */
+    .hero-stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 2.5rem;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .stat-pill {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 1.25rem;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      box-shadow: 0 2px 10px rgba(36, 27, 47, 0.04);
+      transition: all 0.25s ease;
+    }
+
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(107, 37, 69, 0.1);
+      border-color: var(--primary);
+    }
+
+    .stat-pill-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary-soft);
       color: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 1rem;
+      font-size: 0.85rem;
     }
+
+    /* Portal Grid Cards */
+    .portal-section-wrapper {
+      max-width: 1240px;
+      margin: 0 auto 4rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .portal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 6px 24px rgba(36, 27, 47, 0.06);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary) 0%, #d79f62 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .portal-card:hover {
+      box-shadow: 0 16px 40px rgba(107, 37, 69, 0.15);
+      border-color: var(--primary);
+      transform: translateY(-6px);
+    }
+
+    .portal-card:hover::before {
+      opacity: 1;
+    }
+
+    .portal-icon-box {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(107, 37, 69, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .portal-card:hover .portal-icon-box {
+      transform: scale(1.1);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
     .portal-title {
-      font-size: 1.3rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      margin-bottom: 0.4rem;
+      font-family: 'Literata', serif;
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
     }
+
     .portal-desc {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: var(--text-muted);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.85rem;
+      line-height: 1.55;
     }
+
     .action-group {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.75rem;
       width: 100%;
+    }
+
+    /* Amenities Grid Section */
+    .amenities-section {
+      max-width: 1240px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .section-tag {
+      display: inline-block;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.35rem 0.95rem;
+      border-radius: 20px;
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .section-header h2 {
+      font-size: 2.3rem;
+      color: var(--primary);
+      margin-bottom: 0.65rem;
+      font-family: 'Literata', serif;
+    }
+
+    .section-header p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.6rem 1.4rem;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      box-shadow: 0 4px 14px rgba(36, 27, 47, 0.04);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(107, 37, 69, 0.12);
+      border-color: var(--primary);
+    }
+
+    .feature-icon-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--surface-low);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      font-family: 'Literata', serif;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Infinite Carousel Section Styling */
+    .rooms-section {
+      max-width: 1240px;
+      margin: 5rem auto 4rem auto;
+      padding: 3rem 1.5rem 0 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .carousel-outer-wrapper {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      padding: 15px 0 25px 0;
+    }
+
+    .carousel-outer-wrapper::before,
+    .carousel-outer-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 80px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .carousel-outer-wrapper::before {
+      left: 0;
+      background: linear-gradient(to right, var(--surface, #fff7ff) 0%, rgba(255, 247, 255, 0) 100%);
+    }
+
+    .carousel-outer-wrapper::after {
+      right: 0;
+      background: linear-gradient(to left, var(--surface, #fff7ff) 0%, rgba(255, 247, 255, 0) 100%);
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 1.85rem;
+      width: max-content;
+      animation: infiniteMarquee 34s linear infinite;
+      will-change: transform;
+    }
+
+    .carousel-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes infiniteMarquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(-33.3333% - 0.616rem)); }
+    }
+
+    /* Room Cards */
+    .room-card {
+      width: 335px;
+      flex: 0 0 335px;
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 6px 24px rgba(36, 27, 47, 0.06);
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .room-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 18px 40px rgba(107, 37, 69, 0.18);
+      border-color: var(--primary);
+    }
+
+    .room-image-wrap {
+      position: relative;
+      height: 225px;
+      overflow: hidden;
+      background-color: #f2e2ff;
+    }
+
+    .room-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .room-card:hover .room-image-wrap img {
+      transform: scale(1.08);
+    }
+
+    .badge-sharing {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(107, 37, 69, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .badge-rating {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      color: #b45309;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    .badge-price {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 0.4rem 0.95rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+
+    .badge-price span.period {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .room-details-body {
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .room-title {
+      font-family: 'Literata', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .room-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 0.9rem;
+    }
+
+    .room-meta-row svg {
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .room-amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .amenity-chip {
+      background: var(--surface-low);
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 0.22rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid rgba(107, 37, 69, 0.12);
+    }
+
+    .btn-room-details {
+      background-color: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid rgba(107, 37, 69, 0.2);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: all 0.25s ease;
+    }
+
+    .btn-room-details:hover {
+      background-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(107, 37, 69, 0.3);
+    }
+
+    /* Carousel Control Bar */
+    .carousel-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.25rem;
+      padding: 0 0.5rem;
+    }
+
+    .carousel-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .carousel-actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .carousel-arrow-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-dark);
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .carousel-arrow-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      max-width: 900px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .faq-item {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: var(--primary);
+    }
+
+    .faq-question {
+      padding: 1.2rem 1.5rem;
+      font-family: 'Literata', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .faq-question svg {
+      transition: transform 0.3s ease;
+      color: var(--primary);
+    }
+
+    .faq-item.active .faq-question svg {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-out, padding 0.35s ease-out;
+      padding: 0 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      padding: 0 1.5rem 1.25rem 1.5rem;
+    }
+
+    /* Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card-box {
+      background: #ffffff;
+      border-radius: 24px;
+      max-width: 520px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.3);
+      animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.92) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: background 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(0,0,0,0.9);
+    }
+
+    .modal-hero-img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+
+    .modal-content-inner {
+      padding: 1.5rem;
+    }
+
+    .modal-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-title-row h3 {
+      font-family: 'Literata', serif;
+      font-size: 1.45rem;
+      color: var(--primary);
+    }
+
+    .modal-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-desc-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+      line-height: 1.55;
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      background: var(--surface-low);
+      padding: 1rem;
+      border-radius: 14px;
+      margin-bottom: 1.25rem;
+      font-size: 0.88rem;
+    }
+
+    .modal-detail-item strong {
+      display: block;
+      color: var(--text-dark);
+      margin-bottom: 0.15rem;
+    }
+
+    .modal-detail-item span {
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.3rem; }
+      .hero-stats-row { flex-direction: column; align-items: center; }
+      .portal-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <%- include('partials/header') %>
 
-  <div class="landing-wrapper">
-    <div class="landing-hero">
-      <h1>Pujyasritha's Living</h1>
-      <p>Safe, Comfortable & Modern Women's PG Management Portal</p>
-    </div>
+  <!-- Hero Section -->
+  <div class="landing-hero-wrapper">
+    <div class="hero-ambient-glow"></div>
+    <div class="hero-content">
+      <div class="hero-badge-tag">
+        <span class="sparkle">✦</span> Premier Women's Living • Safe, Hygienic & Comfort
+      </div>
+      <h1 class="hero-title">Pujyasritha's Living</h1>
+      <p class="hero-subtitle">Experience a sanctuary of safety, luxury, and modern convenience designed specifically for students and working women.</p>
 
+      <!-- Stats Bar -->
+      <div class="hero-stats-row">
+        <div class="stat-pill">
+          <div class="stat-pill-icon">🛡️</div>
+          <span>100% CCTV & Biometric Safety</span>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-pill-icon">🍲</div>
+          <span>3 Delicious Meals Daily</span>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-pill-icon">⚡</div>
+          <span>High-Speed Wi-Fi & Power Backup</span>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-pill-icon">⭐</div>
+          <span>4.9 / 5 Resident Rating</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portal Cards Section -->
+  <div class="portal-section-wrapper">
     <div class="portal-grid">
-      <!-- Tenant Portal Card -->
+      <!-- Resident Portal Card -->
       <div class="portal-card">
         <div>
-          <div class="portal-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="portal-icon-box">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div class="portal-title">Resident Portal</div>
-          <div class="portal-desc">Access your room details, rent information, and resident services.</div>
+          <div class="portal-desc">Access your assigned room details, rent payment records, profile information, and raise maintenance tickets easily.</div>
         </div>
         <div class="action-group">
           <a href="/login" class="btn btn-primary">Resident Login</a>
@@ -104,11 +826,11 @@
       <!-- Admin Portal Card -->
       <div class="portal-card">
         <div>
-          <div class="portal-icon" style="background: rgba(34, 197, 94, 0.1); color: #15803D;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          <div class="portal-icon-box" style="background: rgba(34, 197, 94, 0.1); color: #15803D;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
           </div>
           <div class="portal-title">PG Management</div>
-          <div class="portal-desc">Manage rooms, tenant directory, property occupancy, and rent tracking.</div>
+          <div class="portal-desc">Manage room allocations, tenant directory, occupancy tracking, and resident complaints seamlessly.</div>
         </div>
         <div class="action-group">
           <a href="/admin/login" class="btn btn-primary" style="background-color: #2F2F2F;">Admin Login</a>
@@ -117,6 +839,521 @@
       </div>
     </div>
   </div>
+
+  <!-- Key Amenities & Highlights Section -->
+  <section class="amenities-section">
+    <div class="section-header">
+      <span class="section-tag">Why Choose Us</span>
+      <h2>Designed for Comfort & Peace of Mind</h2>
+      <p>Everything you need for a comfortable stay so you can focus on your studies, career, and personal growth.</p>
+    </div>
+
+    <div class="amenities-grid">
+      <div class="feature-card">
+        <div class="feature-icon-circle">🔒</div>
+        <h3>24/7 Security & CCTV</h3>
+        <p>Round-the-clock security personnel, biometric gate entry, and continuous CCTV monitoring for total safety.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-circle">🍲</div>
+        <h3>Nutritious 3 Meals Daily</h3>
+        <p>Hygiene-first kitchen serving fresh, home-cooked breakfast, lunch, and dinner tailored to regional tastes.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-circle">⚡</div>
+        <h3>High-Speed Wi-Fi & Backup</h3>
+        <p>Uninterrupted high-speed fiber internet and generator power backup for seamless remote work and study.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-circle">🧹</div>
+        <h3>Daily Housekeeping</h3>
+        <p>Dedicated staff ensuring spotless rooms, sanitized bathrooms, and fresh common area maintenance every day.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Infinite Carousel Room Showcase Section at Bottom of Webpage -->
+  <section class="rooms-section">
+    <div class="section-header">
+      <span class="section-tag">Accommodations</span>
+      <h2>Explore Our Premium Rooms</h2>
+      <p>Thoughtfully designed single, double, triple, and four-sharing rooms with modern amenities, round-the-clock security, and comfortable living space.</p>
+    </div>
+
+    <!-- Carousel Outer Container -->
+    <div class="carousel-outer-wrapper" id="carouselOuter">
+      <div class="carousel-track" id="carouselTrack">
+
+        <!-- Dynamic Set 1 of Rooms -->
+        <!-- Room 1: 1-Sharing -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/1sharing-room.webp" alt="Single Sharing Luxury Room" loading="lazy">
+            <span class="badge-sharing">1-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹12,000<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Single Luxury Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>1 Person • Private Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Private Bath</span>
+                <span class="amenity-chip">Air Conditioned</span>
+                <span class="amenity-chip">Work Desk</span>
+                <span class="amenity-chip">High-Speed Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('1-Sharing', 'Single Luxury Room', '/Room-photos/1sharing-room.webp', '₹12,000 / month', '₹10,000', '1 Person', 'Private Luxury Sanctuary featuring an attached bath, custom work desk, AC, wardrobe, and 24/7 high-speed Wi-Fi.', ['Private Bathroom', 'Air Conditioned', 'Dedicated Work Desk', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'Daily Cleaning'])">View Room Details</button>
+          </div>
+        </div>
+
+        <!-- Room 2: 2-Sharing -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/2-sharing-room.webp" alt="Double Sharing Room" loading="lazy">
+            <span class="badge-sharing">2-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹8,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Executive Double Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>2 Persons • Double Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Attached Balcony</span>
+                <span class="amenity-chip">Individual Wardrobes</span>
+                <span class="amenity-chip">AC</span>
+                <span class="amenity-chip">Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('2-Sharing', 'Executive Double Room', '/Room-photos/2-sharing-room.webp', '₹8,500 / month', '₹8,000', '2 Persons', 'Spacious double sharing room equipped with individual wardrobes, AC, private balcony, and personal study space.', ['Attached Balcony', 'Individual Wardrobes', 'Air Conditioned', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'CCTV Security'])">View Room Details</button>
+          </div>
+        </div>
+
+        <!-- Room 3: 3-Sharing -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/3-sharing-room.webp" alt="Triple Sharing Room" loading="lazy">
+            <span class="badge-sharing">3-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹6,800<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Comfort Triple Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M7 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>3 Persons • Triple Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Spacious Layout</span>
+                <span class="amenity-chip">Security Lockers</span>
+                <span class="amenity-chip">Housekeeping</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('3-Sharing', 'Comfort Triple Room', '/Room-photos/3-sharing-room.webp', '₹6,800 / month', '₹6,000', '3 Persons', 'Well-ventilated triple sharing room with individual lockers, excellent lighting, daily housekeeping, and power backup.', ['Security Lockers', 'Daily Housekeeping', 'Power Backup', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'RO Water Filter'])">View Room Details</button>
+          </div>
+        </div>
+
+        <!-- Room 4: 4-Sharing -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/4-sharing-room.webp" alt="Four Sharing Room" loading="lazy">
+            <span class="badge-sharing">4-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹5,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Economy Four Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>4 Persons • Quad Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Economy Pricing</span>
+                <span class="amenity-chip">All Utilities</span>
+                <span class="amenity-chip">Daily Cleaning</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('4-Sharing', 'Economy Four Room', '/Room-photos/4-sharing-room.webp', '₹5,500 / month', '₹5,000', '4 Persons', 'Budget-friendly four-sharing space ideal for students & working professionals with all-inclusive food & utilities.', ['Budget Friendly', 'All Utilities Included', '3 Nutritious Meals/Day', 'Daily Cleaning', 'RO Water', 'High Security'])">View Room Details</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Set 2 of Rooms (Duplicate for 100% Seamless Infinite Loop) -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/1sharing-room.webp" alt="Single Sharing Luxury Room" loading="lazy">
+            <span class="badge-sharing">1-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹12,000<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Single Luxury Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>1 Person • Private Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Private Bath</span>
+                <span class="amenity-chip">Air Conditioned</span>
+                <span class="amenity-chip">Work Desk</span>
+                <span class="amenity-chip">High-Speed Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('1-Sharing', 'Single Luxury Room', '/Room-photos/1sharing-room.webp', '₹12,000 / month', '₹10,000', '1 Person', 'Private Luxury Sanctuary featuring an attached bath, custom work desk, AC, wardrobe, and 24/7 high-speed Wi-Fi.', ['Private Bathroom', 'Air Conditioned', 'Dedicated Work Desk', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'Daily Cleaning'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/2-sharing-room.webp" alt="Double Sharing Room" loading="lazy">
+            <span class="badge-sharing">2-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹8,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Executive Double Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>2 Persons • Double Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Attached Balcony</span>
+                <span class="amenity-chip">Individual Wardrobes</span>
+                <span class="amenity-chip">AC</span>
+                <span class="amenity-chip">Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('2-Sharing', 'Executive Double Room', '/Room-photos/2-sharing-room.webp', '₹8,500 / month', '₹8,000', '2 Persons', 'Spacious double sharing room equipped with individual wardrobes, AC, private balcony, and personal study space.', ['Attached Balcony', 'Individual Wardrobes', 'Air Conditioned', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'CCTV Security'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/3-sharing-room.webp" alt="Triple Sharing Room" loading="lazy">
+            <span class="badge-sharing">3-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹6,800<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Comfort Triple Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M7 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>3 Persons • Triple Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Spacious Layout</span>
+                <span class="amenity-chip">Security Lockers</span>
+                <span class="amenity-chip">Housekeeping</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('3-Sharing', 'Comfort Triple Room', '/Room-photos/3-sharing-room.webp', '₹6,800 / month', '₹6,000', '3 Persons', 'Well-ventilated triple sharing room with individual lockers, excellent lighting, daily housekeeping, and power backup.', ['Security Lockers', 'Daily Housekeeping', 'Power Backup', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'RO Water Filter'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/4-sharing-room.webp" alt="Four Sharing Room" loading="lazy">
+            <span class="badge-sharing">4-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹5,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Economy Four Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>4 Persons • Quad Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Economy Pricing</span>
+                <span class="amenity-chip">All Utilities</span>
+                <span class="amenity-chip">Daily Cleaning</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('4-Sharing', 'Economy Four Room', '/Room-photos/4-sharing-room.webp', '₹5,500 / month', '₹5,000', '4 Persons', 'Budget-friendly four-sharing space ideal for students & working professionals with all-inclusive food & utilities.', ['Budget Friendly', 'All Utilities Included', '3 Nutritious Meals/Day', 'Daily Cleaning', 'RO Water', 'High Security'])">View Room Details</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Set 3 of Rooms (Buffer for Ultra-Wide Displays) -->
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/1sharing-room.webp" alt="Single Sharing Luxury Room" loading="lazy">
+            <span class="badge-sharing">1-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹12,000<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Single Luxury Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>1 Person • Private Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Private Bath</span>
+                <span class="amenity-chip">Air Conditioned</span>
+                <span class="amenity-chip">Work Desk</span>
+                <span class="amenity-chip">High-Speed Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('1-Sharing', 'Single Luxury Room', '/Room-photos/1sharing-room.webp', '₹12,000 / month', '₹10,000', '1 Person', 'Private Luxury Sanctuary featuring an attached bath, custom work desk, AC, wardrobe, and 24/7 high-speed Wi-Fi.', ['Private Bathroom', 'Air Conditioned', 'Dedicated Work Desk', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'Daily Cleaning'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/2-sharing-room.webp" alt="Double Sharing Room" loading="lazy">
+            <span class="badge-sharing">2-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹8,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Executive Double Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>2 Persons • Double Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Attached Balcony</span>
+                <span class="amenity-chip">Individual Wardrobes</span>
+                <span class="amenity-chip">AC</span>
+                <span class="amenity-chip">Wi-Fi</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('2-Sharing', 'Executive Double Room', '/Room-photos/2-sharing-room.webp', '₹8,500 / month', '₹8,000', '2 Persons', 'Spacious double sharing room equipped with individual wardrobes, AC, private balcony, and personal study space.', ['Attached Balcony', 'Individual Wardrobes', 'Air Conditioned', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'CCTV Security'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/3-sharing-room.webp" alt="Triple Sharing Room" loading="lazy">
+            <span class="badge-sharing">3-Sharing</span>
+            <div class="badge-rating">★ 4.9</div>
+            <div class="badge-price">₹6,800<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Comfort Triple Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M7 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>3 Persons • Triple Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Spacious Layout</span>
+                <span class="amenity-chip">Security Lockers</span>
+                <span class="amenity-chip">Housekeeping</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('3-Sharing', 'Comfort Triple Room', '/Room-photos/3-sharing-room.webp', '₹6,800 / month', '₹6,000', '3 Persons', 'Well-ventilated triple sharing room with individual lockers, excellent lighting, daily housekeeping, and power backup.', ['Security Lockers', 'Daily Housekeeping', 'Power Backup', 'High-Speed Wi-Fi', '3 Nutritious Meals/Day', 'RO Water Filter'])">View Room Details</button>
+          </div>
+        </div>
+
+        <div class="room-card">
+          <div class="room-image-wrap">
+            <img src="/Room-photos/4-sharing-room.webp" alt="Four Sharing Room" loading="lazy">
+            <span class="badge-sharing">4-Sharing</span>
+            <div class="badge-rating">★ 4.8</div>
+            <div class="badge-price">₹5,500<span class="period">/mo</span></div>
+          </div>
+          <div class="room-details-body">
+            <div>
+              <h3 class="room-title">Economy Four Room</h3>
+              <div class="room-meta-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>4 Persons • Quad Occupancy</span>
+              </div>
+              <div class="room-amenities">
+                <span class="amenity-chip">Economy Pricing</span>
+                <span class="amenity-chip">All Utilities</span>
+                <span class="amenity-chip">Daily Cleaning</span>
+              </div>
+            </div>
+            <button class="btn-room-details" onclick="openRoomModal('4-Sharing', 'Economy Four Room', '/Room-photos/4-sharing-room.webp', '₹5,500 / month', '₹5,000', '4 Persons', 'Budget-friendly four-sharing space ideal for students & working professionals with all-inclusive food & utilities.', ['Budget Friendly', 'All Utilities Included', '3 Nutritious Meals/Day', 'Daily Cleaning', 'RO Water', 'High Security'])">View Room Details</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Controls & Indicator Bar -->
+    <div class="carousel-controls-bar">
+      <div class="carousel-status-indicator">
+        <span class="pulse-dot"></span>
+        <span>Hover cards to pause continuous carousel</span>
+      </div>
+      <div class="carousel-actions">
+        <button class="carousel-arrow-btn" onclick="scrollCarousel(-360)" title="Previous Rooms">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="carousel-arrow-btn" onclick="scrollCarousel(360)" title="Next Rooms">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Frequently Asked Questions Accordion Section -->
+  <section class="faq-section">
+    <div class="section-header">
+      <span class="section-tag">Got Questions?</span>
+      <h2>Frequently Asked Questions</h2>
+      <p>Here are answers to the most common questions our prospective residents ask.</p>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>What items and furniture are provided in each room?</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-answer">
+          Every room is fully furnished with comfortable beds, high-density mattresses, individual personal wardrobes with security locks, study tables with chairs, and proper ventilation.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>Are 3 daily meals included in the monthly rent?</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-answer">
+          Yes! Nutritious home-style cooked breakfast, lunch, and dinner are included in the monthly rent, prepared in a hygienic kitchen using fresh ingredients.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>How is security managed at Pujyasritha's Living?</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-answer">
+          We prioritize resident safety above all else. We feature 24/7 security wardens, biometric access control at entry gates, CCTV surveillance in common areas, and strict visitor verification.
+        </div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">
+          <span>How can residents log complaints or maintenance requests?</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-answer">
+          Residents can log into the Resident Portal anytime to lodge maintenance issues (plumbing, electrical, Wi-Fi, cleaning) and track resolution status in real time.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Room Details Popup Modal -->
+  <div class="modal-overlay" id="roomModalOverlay" onclick="closeRoomModal(event)">
+    <div class="modal-card-box" onclick="event.stopPropagation()">
+      <button class="modal-close-btn" onclick="closeRoomModal()">&times;</button>
+      <img id="modalImg" class="modal-hero-img" src="" alt="Room Photo">
+      <div class="modal-content-inner">
+        <div class="modal-title-row">
+          <h3 id="modalTitle">Room Title</h3>
+          <div class="modal-price" id="modalPrice">₹0 / mo</div>
+        </div>
+        <p class="modal-desc-text" id="modalDesc">Room description goes here.</p>
+        
+        <div class="modal-details-grid">
+          <div class="modal-detail-item">
+            <strong>Sharing Type</strong>
+            <span id="modalSharing">1-Sharing</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Capacity</strong>
+            <span id="modalCapacity">1 Person</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Security Deposit</strong>
+            <span id="modalDeposit">₹10,000</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Maintenance</strong>
+            <span>Included in Rent</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <strong style="display: block; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-dark);">Included Features & Amenities:</strong>
+          <div class="room-amenities" id="modalAmenitiesList">
+            <!-- Amenities inserted dynamically -->
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <a href="/login" class="btn btn-primary" style="flex: 1;">Resident Login</a>
+          <a href="/register" class="btn btn-outline" style="flex: 1;">Register to Book</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Room Modal Handler
+    function openRoomModal(sharingType, title, imgUrl, price, deposit, capacity, description, amenities) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalImg').src = imgUrl;
+      document.getElementById('modalPrice').textContent = price;
+      document.getElementById('modalSharing').textContent = sharingType;
+      document.getElementById('modalCapacity').textContent = capacity;
+      document.getElementById('modalDeposit').textContent = deposit;
+      document.getElementById('modalDesc').textContent = description;
+
+      const amenitiesContainer = document.getElementById('modalAmenitiesList');
+      amenitiesContainer.innerHTML = '';
+      amenities.forEach(item => {
+        const span = document.createElement('span');
+        span.className = 'amenity-chip';
+        span.textContent = item;
+        amenitiesContainer.appendChild(span);
+      });
+
+      document.getElementById('roomModalOverlay').classList.add('active');
+    }
+
+    function closeRoomModal(e) {
+      document.getElementById('roomModalOverlay').classList.remove('active');
+    }
+
+    // Manual Arrow Button Navigation for Carousel
+    function scrollCarousel(distance) {
+      const outer = document.getElementById('carouselOuter');
+      const track = document.getElementById('carouselTrack');
+      
+      track.style.animationPlayState = 'paused';
+      outer.scrollBy({ left: distance, behavior: 'smooth' });
+
+      setTimeout(() => {
+        track.style.animationPlayState = 'running';
+      }, 3500);
+    }
+
+    // FAQ Accordion Handler
+    function toggleFaq(element) {
+      const isAlreadyActive = element.classList.contains('active');
+      document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('active'));
+      if (!isAlreadyActive) {
+        element.classList.add('active');
+      }
+    }
+  </script>
 
   <%- include('partials/footer') %>
 </body>
