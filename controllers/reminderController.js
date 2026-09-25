@@ -111,13 +111,13 @@ const generatePendingTenantsCSV = (pendingList) => {
   return headerStr + recordsStr;
 };
 
-// Background worker to process and send rent reminders asynchronously
+// Background worker to process and send rent reminders asynchronously (Admin Summary Only)
 const processRentReminders = async (isTest = false) => {
   try {
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    console.log(`\n⏰ [CRON JOB STARTED] Processing monthly rent reminders for month: ${currentMonth} (Test Mode: ${isTest})`);
+    console.log(`\n⏰ [CRON JOB STARTED] Processing monthly pending rent summary for month: ${currentMonth} (Test Mode: ${isTest})`);
 
     // Synchronized calculation matching Admin Dashboard:
     // Fetch all active PG rooms & existing RentPayment records for current month
@@ -127,7 +127,6 @@ const processRentReminders = async (isTest = false) => {
     existingPayments.forEach(p => paymentMap.set(p.tenantId, p));
 
     const pendingListForReport = [];
-    const eligiblePaymentsToNotify = [];
 
     for (const room of rooms) {
       if (room.tenants && room.tenants.length > 0) {
@@ -155,7 +154,7 @@ const processRentReminders = async (isTest = false) => {
             const tenantItem = {
               tenantId: embedded.tenantId,
               name: embedded.name || 'Resident',
-              email: embedded.email || null,
+              email: embedded.email || 'N/A',
               roomNumber: room.roomNumber,
               sharingType: sharingTypeStr,
               rent: rentAmount,
@@ -164,111 +163,33 @@ const processRentReminders = async (isTest = false) => {
             };
 
             pendingListForReport.push(tenantItem);
-
-            // Check if reminder was NOT already sent for current month (or if running in test mode)
-            if (isTest || paymentDoc.reminderSentMonth !== currentMonth) {
-              eligiblePaymentsToNotify.push(tenantItem);
-            }
           }
         }
       }
     }
 
-    console.log(`📊 Found ${pendingListForReport.length} total pending/partial rent records for ${currentMonth}. ${eligiblePaymentsToNotify.length} eligible for reminder notifications.`);
+    console.log(`📊 Found ${pendingListForReport.length} total pending/partial rent records for ${currentMonth}. Dispatching summary report to Admin.`);
 
-    let sentCount = 0;
-    let failCount = 0;
+    // Send Admin Email with Pending Tenant Count and PDF/CSV Report Attachments via Resend API
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_EMAILS || process.env.GOOGLEUSER || 'shivasiddamshetty26@gmail.com';
+    let emailSent = false;
 
-    for (const item of eligiblePaymentsToNotify) {
-      if (!item.email) {
-        console.warn(`⚠️ Skipping tenant ID ${item.tenantId}: No registered email address found.`);
-        await NotificationLog.create({
-          tenantId: item.tenantId,
-          tenantName: item.name,
-          email: 'N/A',
-          status: 'FAILED',
-          message: 'No registered email address found'
-        });
-        failCount++;
-        continue;
-      }
-
-      const subject = "Rent Payment Reminder - Pujyasritha's Living";
-      const plainTextMessage = `Hello ${item.name}, kindly pay the room rent for this month as soon as possible.\n\nRoom Details:\n- Room Number: Room ${item.roomNumber}\n- Sharing Type: ${item.sharingType}\n- Monthly Rent: ₹${item.rent.toLocaleString('en-IN')}`;
-
-      const htmlMessage = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
-          <h2 style="color: #6C63FF; margin-top: 0;">Pujyasritha's Living</h2>
-          <p style="font-size: 16px; line-height: 1.5; color: #333;">
-            Hello <strong>${item.name}</strong>, kindly pay the room rent for this month as soon as possible.
-          </p>
-          <div style="background: #F8FAFC; padding: 15px; border-left: 4px solid #6C63FF; border-radius: 6px; margin: 15px 0; border: 1px solid #E2E8F0;">
-            <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #475569;">📋 Room & Rent Details</h3>
-            <p style="margin: 4px 0; font-size: 14px; color: #334155;"><strong>Room Number:</strong> Room ${item.roomNumber}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #334155;"><strong>Sharing Type:</strong> ${item.sharingType}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #334155;"><strong>Monthly Rent:</strong> ₹${item.rent.toLocaleString('en-IN')}</p>
-          </div>
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
-            Pujyasritha's Living Women's PG Management System
-          </p>
-        </div>
-      `;
-
-      try {
-        await sendEmail(item.email, subject, plainTextMessage, htmlMessage);
-
-        // Update reminderSentMonth on the RentPayment document
-        item.paymentDoc.reminderSentMonth = currentMonth;
-        await item.paymentDoc.save();
-
-        await NotificationLog.create({
-          tenantId: item.tenantId,
-          tenantName: item.name,
-          email: item.email,
-          status: 'SENT',
-          message: plainTextMessage
-        });
-
-        sentCount++;
-        console.log(`✅ Rent reminder sent to ${item.name} (${item.email})`);
-      } catch (sendErr) {
-        console.error(`❌ Error sending rent reminder email to ${item.email}:`, sendErr.message);
-        await NotificationLog.create({
-          tenantId: item.tenantId,
-          tenantName: item.name,
-          email: item.email,
-          status: 'FAILED',
-          message: sendErr.message
-        });
-        failCount++;
-      }
-
-      // Rate Limiting: 300ms delay between consecutive emails
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-
-    // Send Admin Email with Pending Tenant Count and PDF/CSV Report Attachments
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_EMAILS || process.env.GOOGLEUSER;
     if (adminEmail) {
       const adminSubject = `Monthly Pending Rent Reminders Summary — ${currentMonth}`;
       const adminMessage = `${pendingListForReport.length} tenants have pending rent payments for month ${currentMonth}.`;
 
       const adminHtml = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
-          <h2 style="color: #6C63FF; margin-top: 0;">Pujyasritha's Living</h2>
-          <h3 style="color: #333; margin-bottom: 10px;">Monthly Rent Reminders Summary (${currentMonth})</h3>
+          <h2 style="color: #6b2c3e; margin-top: 0;">Pujyasritha's Living</h2>
+          <h3 style="color: #333; margin-bottom: 10px;">Monthly Rent Pending Summary (${currentMonth})</h3>
           <p style="font-size: 15px; color: #333;">Hello Admin,</p>
-          <div style="background: #F8FAFC; border-left: 4px solid #6C63FF; padding: 15px; border-radius: 6px; margin: 15px 0;">
-            <p style="margin: 0; font-size: 16px; font-weight: bold; color: #1E293B;">
-              📊 <strong>${pendingListForReport.length}</strong> tenants have pending rent payments for this month.
-            </p>
-            <p style="margin: 6px 0 0 0; font-size: 14px; color: #64748B;">
-              Reminders Dispatched This Run: ${sentCount}
+          <div style="background: #FFF5F7; border-left: 4px solid #6b2c3e; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #FCE7F3;">
+            <p style="margin: 0; font-size: 16px; font-weight: bold; color: #6b2c3e;">
+              📊 <strong>${pendingListForReport.length}</strong> tenants have pending/partial rent payments for this month.
             </p>
           </div>
           <p style="font-size: 14px; color: #475569;">
-            Attached to this email is the official <strong>PDF document</strong> and <strong>CSV spreadsheet</strong> detailing all residents with pending/partial rent payments.
+            Attached to this email is the official <strong>PDF report</strong> and <strong>CSV spreadsheet</strong> containing complete tenant details, room numbers, sharing types, and pending amounts.
           </p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
@@ -299,13 +220,14 @@ const processRentReminders = async (isTest = false) => {
             }
           ]
         );
-        console.log(`📧 Admin summary email & PDF/CSV attachments sent to (${adminEmail}): "${adminMessage}"`);
+        emailSent = true;
+        console.log(`📧 Admin summary email & PDF/CSV attachments sent via Resend API to (${adminEmail}): "${adminMessage}"`);
       } catch (adminErr) {
         console.error("❌ Failed to send admin reminder summary email & attachments:", adminErr.message);
       }
     }
 
-    console.log(`🏁 [CRON JOB COMPLETED] Sent: ${sentCount}, Failed/Skipped: ${failCount}\n`);
+    console.log(`🏁 [CRON JOB COMPLETED] Pending Tenants Count: ${pendingListForReport.length}, Admin Summary Delivered: ${emailSent}\n`);
   } catch (error) {
     console.error("❌ Critical error in processRentReminders background job:", error);
   }

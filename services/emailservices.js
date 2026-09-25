@@ -25,33 +25,8 @@ const sendEmail = async (to, subject, text, html, attachments = []) => {
     const { data, error } = await resend.emails.send(payload);
 
     if (error) {
-      const errMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
-      
-      // If Resend onboarding domain restricts recipient emails, log notice and forward email to account owner email
-      if (
-        errMsg.includes('only send testing emails') || 
-        errMsg.includes('only send to your own email address') || 
-        error.name === 'validation_error'
-      ) {
-        const ownerEmail = process.env.ADMIN_EMAIL || process.env.GOOGLEUSER || 'shivasiddamshetty26@gmail.com';
-        console.warn(`⚠️ Resend Onboarding Notice: Cannot send directly to (${recipientList.join(', ')}) on onboarding@resend.dev without domain verification. Forwarding tenant notification to verified account email (${ownerEmail}).`);
-
-        const fallbackPayload = {
-          ...payload,
-          to: [ownerEmail],
-          subject: `[FOR TENANT: ${recipientList.join(', ')}] ${subject}`
-        };
-
-        const fallbackResult = await resend.emails.send(fallbackPayload);
-        if (fallbackResult.error) {
-          throw new Error(fallbackResult.error.message || 'Resend API Error');
-        }
-        console.log('✅ Tenant reminder sent via Resend API (Delivered to account inbox):', fallbackResult.data.id);
-        return fallbackResult.data;
-      }
-
       console.error('❌ Resend API Error:', error);
-      throw new Error(errMsg);
+      throw new Error(error.message || 'Failed to send email via Resend');
     }
 
     console.log('✅ Message sent via Resend API:', data.id);
