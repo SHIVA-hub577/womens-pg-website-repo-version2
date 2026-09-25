@@ -1,4 +1,11 @@
 require('dotenv').config();
+const dns = require('dns');
+
+// Force Node.js process to prefer IPv4 over IPv6 globally (fixes Render IPv6 ENETUNREACH)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const path = require('path');
 const express = require('express');
 const session = require('express-session');

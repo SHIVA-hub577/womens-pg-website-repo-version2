@@ -1,7 +1,12 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
 
-// Custom IPv4 lookup to prevent ENETUNREACH IPv6 errors on cloud platforms like Render
+// Force Node.js process to prefer IPv4 over IPv6 globally (fixes Render IPv6 ENETUNREACH)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
+// Custom IPv4 lookup fallback
 const customIPv4Lookup = (hostname, options, callback) => {
   return dns.lookup(hostname, { family: 4 }, callback);
 };
@@ -16,6 +21,7 @@ const createTransporter = () => {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true, // Direct SSL
+      family: 4, // Force AF_INET socket
       lookup: customIPv4Lookup,
       auth: {
         user,
@@ -32,6 +38,7 @@ const createTransporter = () => {
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
+    family: 4, // Force AF_INET socket
     lookup: customIPv4Lookup,
     auth: {
       type: 'OAuth2',
