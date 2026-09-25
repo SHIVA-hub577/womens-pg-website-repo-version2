@@ -1,30 +1,38 @@
-require('dotenv').config();
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Custom IPv4 lookup to prevent ENETUNREACH IPv6 errors on cloud platforms like Render
+const customIPv4Lookup = (hostname, options, callback) => {
+  return dns.lookup(hostname, { family: 4 }, callback);
+};
 
 const createTransporter = () => {
   const user = process.env.GOOGLEUSER;
   const pass = process.env.GMAIL_APP_PASSWORD || process.env.GOOGLEPASS || process.env.EMAIL_PASS;
 
-  // Use standard Gmail App Password authentication if provided (force IPv4 with family: 4)
+  // Primary: Standard App Password authentication (Port 465 / SSL / IPv4)
   if (pass) {
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
-      secure: true,
-      family: 4, // Force IPv4 to prevent ENETUNREACH IPv6 errors on cloud hosts like Render
+      secure: true, // Direct SSL
+      lookup: customIPv4Lookup,
       auth: {
         user,
-        pass,
+        pass: pass.replace(/\s+/g, ''), // Clean any accidental whitespace
       },
+      connectionTimeout: 20000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000
     });
   }
 
-  // Fallback to Google OAuth2 authentication (force IPv4 with family: 4)
+  // Fallback: Google OAuth2 authentication (Port 465 / SSL / IPv4)
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    family: 4, // Force IPv4
+    lookup: customIPv4Lookup,
     auth: {
       type: 'OAuth2',
       user: process.env.GOOGLEUSER,
@@ -32,6 +40,9 @@ const createTransporter = () => {
       clientSecret: process.env.GOOGLECLIENTSECRET,
       refreshToken: process.env.GOOGLEREFRESHTOKEN || process.env.GOGOLEREFRESHTOKEN,
     },
+    connectionTimeout: 20000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000
   });
 };
 
@@ -41,8 +52,7 @@ const transporter = createTransporter();
 transporter.verify((error, success) => {
   if (error) {
     console.warn('⚠️ Warning: Email server connection failed:', error.message);
-    console.warn('💡 Tip: Your GOOGLEREFRESHTOKEN may be expired (invalid_grant).');
-    console.warn('💡 Fix: Add GMAIL_APP_PASSWORD=your_16_char_app_password to .env OR update your GOOGLEREFRESHTOKEN.');
+    console.warn('💡 Tip: Make sure GMAIL_APP_PASSWORD is added in your environment variables (.env / Render settings).');
   } else {
     console.log('✅ Email server is ready to send messages');
   }
