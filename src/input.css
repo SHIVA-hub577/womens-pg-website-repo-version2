@@ -405,25 +405,34 @@ a {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.85rem;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
   border-radius: 9999px;
   font-size: 0.82rem;
   font-weight: 600;
   font-family: 'Work Sans', sans-serif;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(107, 44, 62, 0.04);
+}
+
+.badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
 }
 
 .badge:hover {
-  transform: scale(1.04);
-  box-shadow: 0 4px 12px rgba(107, 44, 62, 0.1);
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 0 4px 14px rgba(107, 44, 62, 0.12);
 }
 
-.badge-green, .badge-sage { background-color: #EBF2ED; color: #446B52; border: 1px solid rgba(68, 107, 82, 0.2); }
-.badge-red, .badge-clay { background-color: #FAECEB; color: #9E4338; border: 1px solid rgba(158, 67, 56, 0.2); }
-.badge-yellow, .badge-ochre { background-color: #FBF4E8; color: #946927; border: 1px solid rgba(148, 105, 39, 0.2); }
-.badge-purple, .badge-plum { background-color: #f3e8eb; color: var(--primary); border: 1px solid rgba(107, 44, 62, 0.2); }
+.badge-green, .badge-sage { background-color: #EBF2ED; color: #345e45; border: 1px solid rgba(52, 94, 69, 0.25); }
+.badge-red, .badge-clay { background-color: #FAECEB; color: #9E4338; border: 1px solid rgba(158, 67, 56, 0.25); }
+.badge-yellow, .badge-ochre { background-color: #FBF4E8; color: #946927; border: 1px solid rgba(148, 105, 39, 0.25); }
+.badge-purple, .badge-plum { background-color: #f3e8eb; color: #6b2c3e; border: 1px solid rgba(107, 44, 62, 0.25); }
 
 /* Buttons (Maroon Anti-Gravity Theme) */
 .btn {
@@ -431,8 +440,8 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 0.75rem;
+  padding: 0.7rem 1.35rem;
+  border-radius: 0.85rem;
   font-family: 'Work Sans', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
@@ -440,19 +449,21 @@ a {
   border: none;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary {
-  background-color: #6b2c3e;
+  background: linear-gradient(135deg, #6b2c3e 0%, #52202e 100%);
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(107, 44, 62, 0.2);
+  box-shadow: 0 6px 18px rgba(107, 44, 62, 0.22);
 }
 
 .btn-primary:hover {
-  background-color: #5a2434;
+  background: linear-gradient(135deg, #5a2434 0%, #421824 100%);
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(107, 44, 62, 0.32);
+  box-shadow: 0 10px 24px rgba(107, 44, 62, 0.35);
 }
 
 .btn-primary:active {
