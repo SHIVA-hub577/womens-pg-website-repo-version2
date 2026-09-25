@@ -5,10 +5,13 @@ const createTransporter = () => {
   const user = process.env.GOOGLEUSER;
   const pass = process.env.GMAIL_APP_PASSWORD || process.env.GOOGLEPASS || process.env.EMAIL_PASS;
 
-  // Use standard Gmail App Password authentication if provided
+  // Use standard Gmail App Password authentication if provided (force IPv4 with family: 4)
   if (pass) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      family: 4, // Force IPv4 to prevent ENETUNREACH IPv6 errors on cloud hosts like Render
       auth: {
         user,
         pass,
@@ -16,9 +19,12 @@ const createTransporter = () => {
     });
   }
 
-  // Fallback to Google OAuth2 authentication
+  // Fallback to Google OAuth2 authentication (force IPv4 with family: 4)
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4, // Force IPv4
     auth: {
       type: 'OAuth2',
       user: process.env.GOOGLEUSER,
