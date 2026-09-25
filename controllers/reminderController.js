@@ -8,8 +8,9 @@ const { sendEmail } = require('../services/emailservices');
 
 // Helper to determine if today is the last day of the current month
 const isLastDayOfMonth = (date = new Date()) => {
-  const tomorrow = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-  return tomorrow.getDate() === 1;
+  const today = date;
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  return today.getDate() === lastDay;
 };
 
 // Helper to generate PDF Buffer for pending tenants report

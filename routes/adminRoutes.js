@@ -5,6 +5,10 @@ const dashboardController = require('../controllers/dashboardController');
 
 const upload = require('../middlewares/uploadMiddleware');
 const complaintController = require('../controllers/complaintController');
+const reminderController = require('../controllers/reminderController');
+
+// Public API endpoint for external cron schedulers (secured by x-api-key)
+router.post('/api/send-rent-reminders', reminderController.sendRentReminders);
 
 // Guard admin routes with isAdmin middleware
 router.use('/admin', isAdmin);
