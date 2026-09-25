@@ -179,22 +179,58 @@ const processRentReminders = async (isTest = false) => {
       const adminMessage = `${pendingListForReport.length} tenants have pending rent payments for month ${currentMonth}.`;
 
       const adminHtml = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
-          <h2 style="color: #6b2c3e; margin-top: 0;">Pujyasritha's Living</h2>
-          <h3 style="color: #333; margin-bottom: 10px;">Monthly Rent Pending Summary (${currentMonth})</h3>
-          <p style="font-size: 15px; color: #333;">Hello Admin,</p>
-          <div style="background: #FFF5F7; border-left: 4px solid #6b2c3e; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #FCE7F3;">
-            <p style="margin: 0; font-size: 16px; font-weight: bold; color: #6b2c3e;">
-              📊 <strong>${pendingListForReport.length}</strong> tenants have pending/partial rent payments for this month.
-            </p>
+        <div style="background-color: #faf4f5; padding: 40px 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+          <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.08); border: 1px solid #f3e8eb;">
+            
+            <!-- Premium Header Banner -->
+            <div style="background: linear-gradient(135deg, #6b2c3e 0%, #4a1d2a 100%); padding: 35px 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; font-family: 'Georgia', serif;">Pujyasritha's Living</h1>
+              <p style="color: #fce7f3; margin: 6px 0 0 0; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9;">Administrative Operations Report</p>
+            </div>
+
+            <!-- Main Body Card -->
+            <div style="padding: 35px 30px;">
+              <div style="margin-bottom: 20px;">
+                <h2 style="color: #6b2c3e; margin: 0; font-size: 20px; font-weight: 700; font-family: 'Georgia', serif;">Monthly Rent Pending Summary</h2>
+                <span style="display: inline-block; margin-top: 6px; background: #fff5f7; color: #6b2c3e; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; border: 1px solid #fce7f3;">Cycle: ${currentMonth}</span>
+              </div>
+
+              <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-top: 0;">
+                Hello <strong>Administrator</strong>,
+              </p>
+
+              <!-- Key Stat Highlight Card -->
+              <div style="background: linear-gradient(135deg, #fff5f7 0%, #fff0f3 100%); border-left: 5px solid #6b2c3e; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #fce7f3;">
+                <div style="font-size: 36px; font-weight: 800; color: #6b2c3e; font-family: 'Georgia', serif;">
+                  ${pendingListForReport.length}
+                </div>
+                <div style="font-size: 14px; font-weight: 700; color: #6b2c3e; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Pending Rent Records</div>
+                <div style="font-size: 13px; color: #881337; margin-top: 4px;">Residents with pending or partial rent payments for billing cycle ${currentMonth}</div>
+              </div>
+
+              <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                Attached to this automated system dispatch are the official accounting documents:
+              </p>
+
+              <ul style="padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.8;">
+                <li>📄 <strong>PDF Official Report</strong> (<code>Pending-Tenants-Report-${currentMonth}.pdf</code>)</li>
+                <li>📊 <strong>CSV Spreadsheet Data</strong> (<code>Pending-Tenants-Report-${currentMonth}.csv</code>)</li>
+              </ul>
+
+              <!-- Footer Badge -->
+              <div style="margin-top: 35px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+                <span style="display: inline-block; background: #faf4f5; color: #6b2c3e; font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: 20px; border: 1px solid #fce7f3;">Automated Financial Audit System</span>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background-color: #fdf2f4; padding: 20px 30px; text-align: center; border-top: 1px solid #fce7f3;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                © 2026 Pujyasritha's Living Women's PG & Hostel Management Portal.<br/>
+                Confidential Internal Administrative Communication.
+              </p>
+            </div>
           </div>
-          <p style="font-size: 14px; color: #475569;">
-            Attached to this email is the official <strong>PDF report</strong> and <strong>CSV spreadsheet</strong> containing complete tenant details, room numbers, sharing types, and pending amounts.
-          </p>
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
-            Pujyasritha's Living Women's PG Automated Management System
-          </p>
         </div>
       `;
 

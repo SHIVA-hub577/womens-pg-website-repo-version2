@@ -42,16 +42,34 @@ const sendEmail = async (to, subject, text, html, attachments = []) => {
   }
 };
 
-// Utility wrapper to send simple notification email strictly using Resend API
+// Utility wrapper to send simple notification email with soft luxury anti-gravity HTML styling
 const sendNotification = async (email, subject, message) => {
   const html = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
-      <h2 style="color: #6b2c3e; margin-top: 0;">Pujyasritha's Living</h2>
-      <p style="font-size: 16px; line-height: 1.5; color: #333;">${message}</p>
-      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
-        This is an automated notification from Pujyasritha's Living Management System.
-      </p>
+    <div style="background-color: #faf4f5; padding: 40px 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.08); border: 1px solid #f3e8eb;">
+        <!-- Header Banner -->
+        <div style="background: linear-gradient(135deg, #6b2c3e 0%, #4a1d2a 100%); padding: 35px 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; font-family: 'Georgia', serif;">Pujyasritha's Living</h1>
+          <p style="color: #fce7f3; margin: 6px 0 0 0; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9;">Boutique Women's Hostel & PG</p>
+        </div>
+        <!-- Body Content -->
+        <div style="padding: 35px 30px;">
+          <h2 style="color: #6b2c3e; margin-top: 0; font-size: 18px; font-weight: 600; font-family: 'Georgia', serif;">${subject}</h2>
+          <div style="font-size: 15px; line-height: 1.6; color: #475569; margin: 20px 0;">
+            ${message}
+          </div>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+            <span style="display: inline-block; background: #fff5f7; color: #6b2c3e; font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: 20px; border: 1px solid #fce7f3;">Official Notification</span>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div style="background-color: #fdf2f4; padding: 20px 30px; text-align: center; border-top: 1px solid #fce7f3;">
+          <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+            © 2026 Pujyasritha's Living Women's PG. All rights reserved.<br/>
+            This is an automated notification. Please do not reply directly to this email.
+          </p>
+        </div>
+      </div>
     </div>
   `;
   return await sendEmail(email, subject, message, html);
