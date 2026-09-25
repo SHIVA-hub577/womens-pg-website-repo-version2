@@ -8,44 +8,55 @@ if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-// Force HTTP and HTTPS agents to use IPv4 family for OAuth token requests & external API calls
+// Force HTTP and HTTPS agents to use IPv4 family
 if (http.globalAgent) http.globalAgent.options.family = 4;
 if (https.globalAgent) https.globalAgent.options.family = 4;
 
-// Custom IPv4 lookup fallback
-const customIPv4Lookup = (hostname, options, callback) => {
-  return dns.lookup(hostname, { family: 4 }, callback);
+// Explicitly resolve smtp.gmail.com to an IPv4 IP address to prevent Node C++ getaddrinfo from returning IPv6
+const resolveIPv4Host = (hostname) => {
+  return new Promise((resolve) => {
+    dns.lookup(hostname, { family: 4 }, (err, address) => {
+      if (!err && address) {
+        return resolve(address);
+      }
+      // Hardcoded fallback Gmail SMTP IPv4 address if DNS lookup fails
+      resolve('142.250.107.108');
+    });
+  });
 };
 
-const createTransporter = () => {
+const createTransporter = async () => {
   const user = process.env.GOOGLEUSER;
   const pass = process.env.GMAIL_APP_PASSWORD || process.env.GOOGLEPASS || process.env.EMAIL_PASS;
+  const targetIp = await resolveIPv4Host('smtp.gmail.com');
 
-  // Primary: Standard App Password authentication (Port 465 / SSL / IPv4)
+  // Primary: Standard App Password authentication (Direct IPv4 / Port 465 / SSL)
   if (pass) {
     return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: targetIp,
       port: 465,
       secure: true, // Direct SSL
-      family: 4, // Force AF_INET socket
-      lookup: customIPv4Lookup,
+      tls: {
+        servername: 'smtp.gmail.com', // Required for SSL certificate validation
+      },
       auth: {
         user,
         pass: pass.replace(/\s+/g, ''), // Clean any accidental whitespace
       },
-      connectionTimeout: 20000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000
+      connectionTimeout: 25000,
+      greetingTimeout: 20000,
+      socketTimeout: 25000,
     });
   }
 
-  // Fallback: Google OAuth2 authentication (Port 465 / SSL / IPv4)
+  // Fallback: Google OAuth2 authentication (Direct IPv4 / Port 465 / SSL)
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: targetIp,
     port: 465,
     secure: true,
-    family: 4, // Force AF_INET socket
-    lookup: customIPv4Lookup,
+    tls: {
+      servername: 'smtp.gmail.com',
+    },
     auth: {
       type: 'OAuth2',
       user: process.env.GOOGLEUSER,
@@ -53,27 +64,33 @@ const createTransporter = () => {
       clientSecret: process.env.GOOGLECLIENTSECRET,
       refreshToken: process.env.GOOGLEREFRESHTOKEN || process.env.GOGOLEREFRESHTOKEN,
     },
-    connectionTimeout: 20000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000
+    connectionTimeout: 25000,
+    greetingTimeout: 20000,
+    socketTimeout: 25000,
   });
 };
 
-const transporter = createTransporter();
+// Default static transporter initialized asynchronously
+let activeTransporterPromise = createTransporter();
 
-// Verify the connection configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.warn('⚠️ Warning: Email server connection failed:', error.message);
-    console.warn('💡 Tip: Make sure GMAIL_APP_PASSWORD is added in your environment variables (.env / Render settings).');
-  } else {
-    console.log('✅ Email server is ready to send messages');
-  }
+// Verify connection configuration on boot
+activeTransporterPromise.then((transporter) => {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.warn('⚠️ Warning: Email server connection failed:', error.message);
+      console.warn('💡 Tip: Make sure GMAIL_APP_PASSWORD is added in your environment variables (.env / Render settings).');
+    } else {
+      console.log('✅ Email server is ready to send messages (Direct IPv4 TLS)');
+    }
+  });
+}).catch((err) => {
+  console.warn('⚠️ Warning: Transporter setup error:', err.message);
 });
 
 // Function to send email
 const sendEmail = async (to, subject, text, html, attachments = []) => {
   try {
+    const transporter = await createTransporter();
     const mailOptions = {
       from: `"Pujyasritha's Living" <${process.env.GOOGLEUSER || 'noreply@pujyasrithasliving.com'}>`,
       to,
@@ -115,4 +132,4 @@ const sendNotification = async (email, subject, message) => {
   return await sendEmail(email, subject, message, html);
 };
 
-module.exports = { transporter, sendEmail, sendNotification };
+module.exports = { transporter: activeTransporterPromise, sendEmail, sendNotification };
