@@ -17,28 +17,9 @@ const sendNotification = async (email, subject, message) => {
       </div>
     `;
 
-    const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: email,
-      subject: subject,
-      html: html,
-      text: message,
-    });
-
-    if (error) {
-      console.error('❌ Resend API Error:', error);
-      throw new Error(error.message || 'Failed to send email via Resend');
-    }
-
-    console.log('✅ Email sent successfully via Resend:', data.id);
-    return data;
+    return await sendEmail(email, subject, message, html);
   } catch (err) {
     console.error('❌ Error in sendNotification:', err.message || err);
-    console.log('----------------------------------------------------');
-    console.log(`📬 [TERMINAL FALLBACK LOG] Email to: ${email}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Content: ${message}`);
-    console.log('----------------------------------------------------');
     throw err;
   }
 };
@@ -46,9 +27,10 @@ const sendNotification = async (email, subject, message) => {
 // General function to send email with support for HTML and attachments via Resend
 const sendEmail = async (to, subject, text, html, attachments = []) => {
   try {
+    const recipientList = Array.isArray(to) ? to : [to];
     const payload = {
       from: 'onboarding@resend.dev',
-      to: Array.isArray(to) ? to : [to],
+      to: recipientList,
       subject,
       text,
       html,
@@ -64,8 +46,33 @@ const sendEmail = async (to, subject, text, html, attachments = []) => {
     const { data, error } = await resend.emails.send(payload);
 
     if (error) {
+      const errMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
+      // Handle Resend free tier restriction ("You can only send testing emails to your own email address")
+      if (
+        errMsg.includes('only send testing emails') || 
+        errMsg.includes('only send to your own email address') || 
+        error.name === 'validation_error'
+      ) {
+        const ownerEmail = process.env.ADMIN_EMAIL || process.env.GOOGLEUSER || 'shivasiddamshetty26@gmail.com';
+        console.warn(`⚠️ Resend Onboarding Notice: Cannot send directly to (${recipientList.join(', ')}) on onboarding domain. Rerouting email to verified account owner (${ownerEmail}).`);
+
+        const fallbackPayload = {
+          ...payload,
+          to: [ownerEmail],
+          subject: `[FOR TENANT: ${recipientList.join(', ')}] ${subject}`
+        };
+
+        const fallbackResult = await resend.emails.send(fallbackPayload);
+        if (fallbackResult.error) {
+          console.error('❌ Resend Fallback Error:', fallbackResult.error);
+          throw new Error(fallbackResult.error.message || 'Resend API Error');
+        }
+        console.log('✅ Message sent via Resend (Rerouted to Owner Inbox):', fallbackResult.data.id);
+        return fallbackResult.data;
+      }
+
       console.error('❌ Resend API Error:', error);
-      throw new Error(error.message || 'Failed to send email via Resend');
+      throw new Error(errMsg);
     }
 
     console.log('✅ Message sent via Resend:', data.id);

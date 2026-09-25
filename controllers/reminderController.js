@@ -112,12 +112,12 @@ const generatePendingTenantsCSV = (pendingList) => {
 };
 
 // Background worker to process and send rent reminders asynchronously
-const processRentReminders = async () => {
+const processRentReminders = async (isTest = false) => {
   try {
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    console.log(`\n⏰ [CRON JOB STARTED] Processing monthly rent reminders for month: ${currentMonth}`);
+    console.log(`\n⏰ [CRON JOB STARTED] Processing monthly rent reminders for month: ${currentMonth} (Test Mode: ${isTest})`);
 
     // Synchronized calculation matching Admin Dashboard:
     // Fetch all active PG rooms & existing RentPayment records for current month
@@ -165,8 +165,8 @@ const processRentReminders = async () => {
 
             pendingListForReport.push(tenantItem);
 
-            // Check if reminder was NOT already sent for current month
-            if (paymentDoc.reminderSentMonth !== currentMonth) {
+            // Check if reminder was NOT already sent for current month (or if running in test mode)
+            if (isTest || paymentDoc.reminderSentMonth !== currentMonth) {
               eligiblePaymentsToNotify.push(tenantItem);
             }
           }
@@ -333,7 +333,7 @@ const sendRentReminders = async (req, res) => {
 
     // 4. Background Execution
     setImmediate(() => {
-      processRentReminders().catch(err => {
+      processRentReminders(isTest).catch(err => {
         console.error("Uncaught background reminder error:", err);
       });
     });
