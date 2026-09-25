@@ -6,6 +6,8 @@ const tenantSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   name: { type: String },
   phone: { type: String },
+  emergencyContactNumber: { type: String },
+  relation: { type: String },
   googleId: { type: String },
   tenantId: { type: String },
   roomNumber: { type: String },

@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const Otp = require('../models/Otp');
 const Admin = require('../models/Admin');
 const Tenant = require('../models/Tenant');
+const Worker = require('../models/Worker');
 const Room = require('../models/Room');
 const { sendEmail } = require('../services/emailservices');
 
@@ -17,6 +18,8 @@ const renderLandingPage = (req, res) => {
       return res.redirect('/admin/dashboard');
     } else if (req.session.user.role === 'tenant') {
       return res.redirect('/tenant/profile');
+    } else if (req.session.user.role === 'worker') {
+      return res.redirect('/worker/complaints');
     }
   }
   res.render('index', { hideNavLinks: true });
@@ -48,11 +51,25 @@ const renderAdminRegister = (req, res) => {
   res.render('auth/admin-register', { error: null });
 };
 
+// Render Worker Login View
+const renderWorkerLogin = (req, res) => {
+  res.render('auth/worker-login', {
+    error: req.query.error || null,
+    success: req.query.success || null
+  });
+};
+
+// Render Worker Registration View
+const renderWorkerRegister = (req, res) => {
+  res.render('auth/worker-register', { error: null });
+};
+
 // Initiate Registration OTP
 const sendRegistrationOtp = async (req, res) => {
-  const { email, username, password, confirmPassword, purpose } = req.body;
+  const { email, username, password, confirmPassword, purpose, name, phone } = req.body;
   const isAdminReg = purpose === 'admin-register';
-  const targetView = isAdminReg ? 'auth/admin-register' : 'auth/register';
+  const isWorkerReg = purpose === 'worker-register';
+  const targetView = isWorkerReg ? 'auth/worker-register' : (isAdminReg ? 'auth/admin-register' : 'auth/register');
 
   try {
     if (!email || !username || !password || !confirmPassword || !purpose) {
@@ -71,7 +88,7 @@ const sendRegistrationOtp = async (req, res) => {
       return res.render(targetView, { error: 'Password must be at least 8 characters long.' });
     }
 
-    // Role-specific allowlist check for Admin
+    // Role-specific checks
     if (isAdminReg) {
       const allowlist = getAdminAllowlist();
       if (!allowlist.includes(cleanEmail)) {
@@ -82,6 +99,11 @@ const sendRegistrationOtp = async (req, res) => {
       const existingAdmin = await Admin.findOne({ $or: [{ email: cleanEmail }, { username: cleanUsername }] });
       if (existingAdmin) {
         return res.render(targetView, { error: 'An Admin account with this email or username already exists.' });
+      }
+    } else if (isWorkerReg) {
+      const existingWorker = await Worker.findOne({ $or: [{ email: cleanEmail }, { username: cleanUsername }] });
+      if (existingWorker) {
+        return res.render(targetView, { error: 'A Worker account with this email or username already exists.' });
       }
     } else {
       // Check if Tenant email/username exists
@@ -113,7 +135,8 @@ const sendRegistrationOtp = async (req, res) => {
           registrationData: {
             username: cleanUsername,
             passwordHash,
-            name: cleanUsername
+            name: name ? name.trim() : cleanUsername,
+            phone: phone ? phone.trim() : ''
           },
           createdAt: now,
           expiresAt
@@ -192,6 +215,18 @@ const verifyRegistrationOtp = async (req, res) => {
       });
 
       return res.redirect('/admin/login?success=Admin account registered successfully. Please log in.');
+    }
+
+    if (purpose === 'worker-register') {
+      await Worker.create({
+        username,
+        passwordHash,
+        email: cleanEmail,
+        name: name || username,
+        phone: phone || 'N/A'
+      });
+
+      return res.redirect('/worker/login?success=Worker account registered successfully. Please log in.');
     }
 
     if (purpose === 'tenant-register') {
@@ -314,6 +349,46 @@ const loginAdmin = async (req, res) => {
   } catch (error) {
     console.error('Error in loginAdmin:', error);
     return res.render('auth/admin-login', { error: 'Incorrect username or password', success: null });
+  }
+};
+
+// Worker Login (Username + Password)
+const loginWorker = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.render('auth/worker-login', { error: 'Incorrect username or password', success: null });
+    }
+
+    const cleanUsername = username.trim().toLowerCase();
+    const worker = await Worker.findOne({
+      $or: [{ username: cleanUsername }, { email: cleanUsername }]
+    });
+
+    if (!worker) {
+      return res.render('auth/worker-login', { error: 'Incorrect username or password', success: null });
+    }
+
+    const isMatch = await bcrypt.compare(password, worker.passwordHash);
+    if (!isMatch) {
+      return res.render('auth/worker-login', { error: 'Incorrect username or password', success: null });
+    }
+
+    req.session.user = {
+      id: worker._id,
+      email: worker.email,
+      username: worker.username,
+      name: worker.name || worker.username,
+      role: 'worker'
+    };
+
+    req.session.save((err) => {
+      if (err) console.error('Session save error:', err);
+      return res.redirect('/worker/complaints');
+    });
+  } catch (error) {
+    console.error('Error in loginWorker:', error);
+    return res.render('auth/worker-login', { error: 'Incorrect username or password', success: null });
   }
 };
 
@@ -444,12 +519,15 @@ module.exports = {
   renderLandingPage,
   renderTenantLogin,
   renderAdminLogin,
+  renderWorkerLogin,
   renderTenantRegister,
   renderAdminRegister,
+  renderWorkerRegister,
   sendRegistrationOtp,
   verifyRegistrationOtp,
   loginTenant,
   loginAdmin,
+  loginWorker,
   googleAdminCallback,
   googleTenantCallback,
   logout

@@ -18,6 +18,12 @@ router.post('/admin/login', authController.loginAdmin);
 router.get('/admin/register', authController.renderAdminRegister);
 router.post('/admin/register', authController.sendRegistrationOtp);
 
+// Worker Login & Register Views
+router.get('/worker/login', authController.renderWorkerLogin);
+router.post('/worker/login', authController.loginWorker);
+router.get('/worker/register', authController.renderWorkerRegister);
+router.post('/worker/register', authController.sendRegistrationOtp);
+
 // OTP Verification (Registration Completion)
 router.post('/auth/verify-otp', authController.verifyRegistrationOtp);
 

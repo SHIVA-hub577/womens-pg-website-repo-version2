@@ -10,6 +10,7 @@ const rentPaymentSchema = new mongoose.Schema({
     enum: ['Paid', 'Pending', 'Partial'], 
     default: 'Pending' 
   },
+  reminderSentMonth: { type: String, default: null },
   updatedBy: { type: String, default: null } // admin or tenant email / identifier
 }, { 
   collection: 'rentPayments',

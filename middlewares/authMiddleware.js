@@ -17,8 +17,16 @@ const isTenant = (req, res, next) => {
   res.redirect('/login');
 };
 
+const isWorker = (req, res, next) => {
+  if (req.session && req.session.user && req.session.user.role === 'worker') {
+    return next();
+  }
+  res.redirect('/worker/login');
+};
+
 module.exports = {
   setUserLocals,
   isAdmin,
   isTenant,
+  isWorker,
 };

@@ -11,6 +11,8 @@ const { setUserLocals } = require('./middlewares/authMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
+const workerRoutes = require('./routes/workerRoutes');
+const apiRoutes = require('./routes/apiRoutes');
 
 // Catch uncaught exceptions to keep the server running cleanly
 process.on('uncaughtException', (err) => {
@@ -76,6 +78,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', authRoutes);
 app.use('/', adminRoutes);
 app.use('/', tenantRoutes);
+app.use('/', workerRoutes);
+app.use('/', apiRoutes);
 
 // Root Route Redirect
 app.get('/', (req, res) => {
@@ -83,7 +87,9 @@ app.get('/', (req, res) => {
     if (req.session.user.role === 'admin') {
       return res.redirect('/admin/dashboard');
     } else if (req.session.user.role === 'tenant') {
-      return res.redirect('/dashboard');
+      return res.redirect('/tenant/profile');
+    } else if (req.session.user.role === 'worker') {
+      return res.redirect('/worker/complaints');
     }
   }
   res.redirect('/login');

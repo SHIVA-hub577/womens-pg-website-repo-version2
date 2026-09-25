@@ -96,7 +96,27 @@
 
             <div class="form-group">
               <label for="phone">Phone Number *</label>
-              <input type="tel" id="phone" name="phone" class="form-control" placeholder="9876543210" required>
+              <input type="tel" id="phone" name="phone" class="form-control" placeholder="9876543210" required pattern="^\+?[0-9]{10,15}$" title="Please enter a valid 10 to 15 digit phone number">
+            </div>
+
+            <div class="form-group">
+              <label for="emergencyContactNumber">Emergency Contact Number *</label>
+              <input type="tel" id="emergencyContactNumber" name="emergencyContactNumber" class="form-control" placeholder="9876543210" required pattern="^\+?[0-9]{10,15}$" title="Please enter a valid 10 to 15 digit emergency contact number">
+            </div>
+
+            <div class="form-group">
+              <label for="relation">Relation * (e.g. Father, Mother, Guardian)</label>
+              <input type="text" id="relation" name="relation" class="form-control" placeholder="e.g. Father, Mother, Guardian" list="relationSuggestions" required>
+              <datalist id="relationSuggestions">
+                <option value="Father">
+                <option value="Mother">
+                <option value="Guardian">
+                <option value="Spouse">
+                <option value="Sibling">
+                <option value="Relative">
+                <option value="Friend">
+                <option value="Other">
+              </datalist>
             </div>
 
             <div class="form-group">
@@ -172,6 +192,29 @@
         }
       }
       roomSelect.selectedIndex = 0;
+    });
+
+    // Form submit validation for phone numbers
+    document.getElementById('addTenantForm').addEventListener('submit', function(e) {
+      const phoneInput = document.getElementById('phone');
+      const emergencyInput = document.getElementById('emergencyContactNumber');
+      const phoneVal = phoneInput.value.trim().replace(/[\s\-]/g, '');
+      const emergencyVal = emergencyInput.value.trim().replace(/[\s\-]/g, '');
+      const phoneRegex = /^\+?[0-9]{10,15}$/;
+
+      if (!phoneRegex.test(phoneVal)) {
+        alert('Please enter a valid Phone Number (minimum 10 digits).');
+        phoneInput.focus();
+        e.preventDefault();
+        return false;
+      }
+
+      if (!phoneRegex.test(emergencyVal)) {
+        alert('Please enter a valid Emergency Contact Number (minimum 10 digits).');
+        emergencyInput.focus();
+        e.preventDefault();
+        return false;
+      }
     });
   </script>
 </body>

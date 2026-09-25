@@ -38,6 +38,7 @@
                 <th>Name</th>
                 <th>Room</th>
                 <th>Phone</th>
+                <th>Emergency Contact</th>
                 <th>Email</th>
                 <th>Joining Date</th>
                 <th>Monthly Rent</th>
@@ -53,6 +54,16 @@
                     <td><%= t.name %></td>
                     <td><span class="badge badge-purple">Room <%= t.roomNumber %></span></td>
                     <td><%= t.phone %></td>
+                    <td>
+                      <% if (t.emergencyContactNumber) { %>
+                        <div><%= t.emergencyContactNumber %></div>
+                        <% if (t.relation) { %>
+                          <div style="font-size: 0.75rem; color: var(--text-muted);">(<%= t.relation %>)</div>
+                        <% } %>
+                      <% } else { %>
+                        <span style="color: var(--text-muted);">N/A</span>
+                      <% } %>
+                    </td>
                     <td><%= t.email || 'N/A' %></td>
                     <td><%= t.joiningDate ? new Date(t.joiningDate).toLocaleDateString('en-IN') : 'N/A' %></td>
                     <td>₹<%= (t.rent || 0).toLocaleString('en-IN') %></td>
@@ -62,7 +73,7 @@
                 <% }); %>
               <% } else { %>
                 <tr>
-                  <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No tenants found.</td>
+                  <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">No tenants found.</td>
                 </tr>
               <% } %>
             </tbody>

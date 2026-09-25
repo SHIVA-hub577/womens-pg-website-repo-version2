@@ -10,7 +10,9 @@ const embeddedTenantSchema = new mongoose.Schema({
   joiningDate: { type: Date },
   rent: { type: Number },
   advancePaid: { type: Number },
-  status: { type: String }
+  status: { type: String },
+  emergencyContactNumber: { type: String },
+  relation: { type: String }
 }, { _id: false });
 
 const roomSchema = new mongoose.Schema({

@@ -70,6 +70,8 @@ const getAdminTenants = async (req, res) => {
             rent: t.rent,
             advancePaid: t.advancePaid,
             status: t.status,
+            emergencyContactNumber: t.emergencyContactNumber,
+            relation: t.relation,
             roomNumber: room.roomNumber,
             sharingType: room.sharingType
           });
@@ -116,15 +118,26 @@ const renderAddTenant = async (req, res) => {
 // Create and Allot Tenant (POST /admin/tenants/new)
 const createTenant = async (req, res) => {
   try {
-    const { roomNumber, name, age, gender, email, phone, joiningDate, rent, advancePaid } = req.body;
+    const { roomNumber, name, age, gender, email, phone, emergencyContactNumber, relation, joiningDate, rent, advancePaid } = req.body;
 
-    if (!roomNumber || !name || !email || !phone) {
-      return res.redirect('/admin/tenants/new?error=Please fill in all required fields (Room, Name, Email, Phone).');
+    if (!roomNumber || !name || !email || !phone || !emergencyContactNumber || !relation) {
+      return res.redirect('/admin/tenants/new?error=Please fill in all required fields (Room, Name, Email, Phone, Emergency Contact, Relation).');
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
     const cleanPhone = phone.trim();
+    const cleanEmergencyContact = emergencyContactNumber.trim();
+    const cleanRelation = relation.trim();
+
+    // Validate phone number formats (minimum 10 digits numeric / standard format)
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(cleanPhone.replace(/[\s\-]/g, ''))) {
+      return res.redirect('/admin/tenants/new?error=Please enter a valid Phone Number (minimum 10 digits).');
+    }
+    if (!phoneRegex.test(cleanEmergencyContact.replace(/[\s\-]/g, ''))) {
+      return res.redirect('/admin/tenants/new?error=Please enter a valid Emergency Contact Number (minimum 10 digits).');
+    }
 
     // Find the target room
     const room = await Room.findOne({ roomNumber: roomNumber.trim() });
@@ -154,6 +167,8 @@ const createTenant = async (req, res) => {
       gender: gender || 'Female',
       phone: cleanPhone,
       email: cleanEmail,
+      emergencyContactNumber: cleanEmergencyContact,
+      relation: cleanRelation,
       joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
       rent: rent ? Number(rent) : room.rent,
       advancePaid: advancePaid ? Number(advancePaid) : room.advance,
@@ -185,7 +200,9 @@ const createTenant = async (req, res) => {
           tenantId,
           roomNumber: room.roomNumber,
           name: cleanName,
-          phone: cleanPhone
+          phone: cleanPhone,
+          emergencyContactNumber: cleanEmergencyContact,
+          relation: cleanRelation
         }
       }
     );
@@ -492,6 +509,41 @@ const verifyAndExecuteRemoval = async (req, res) => {
       });
     }
 
+    // STEP 0: Store tenant information into RemovedTenant collection before deleting
+    const RemovedTenant = require('../models/RemovedTenant');
+    const Tenant = require('../models/Tenant');
+    const embeddedTenant = (room && room.tenants) ? room.tenants.find(t => t.tenantId === cleanTenantId) : null;
+    const standaloneTenant = await Tenant.findOne({
+      $or: [{ tenantId: cleanTenantId }, ...(residentEmail ? [{ email: residentEmail }] : [])]
+    });
+
+    const adminActor = (req.session && req.session.user && req.session.user.email) 
+      ? req.session.user.email 
+      : (removalDoc.initiatedBy || 'admin');
+
+    try {
+      await RemovedTenant.create({
+        tenantId: cleanTenantId,
+        name: (embeddedTenant && embeddedTenant.name) || (standaloneTenant && standaloneTenant.name) || residentName || 'N/A',
+        email: (embeddedTenant && embeddedTenant.email) || (standaloneTenant && standaloneTenant.email) || residentEmail || 'N/A',
+        phone: (embeddedTenant && embeddedTenant.phone) || (standaloneTenant && standaloneTenant.phone) || 'N/A',
+        emergencyContactNumber: (embeddedTenant && embeddedTenant.emergencyContactNumber) || (standaloneTenant && standaloneTenant.emergencyContactNumber) || 'N/A',
+        relation: (embeddedTenant && embeddedTenant.relation) || (standaloneTenant && standaloneTenant.relation) || 'N/A',
+        age: (embeddedTenant && embeddedTenant.age) || undefined,
+        gender: (embeddedTenant && embeddedTenant.gender) || undefined,
+        roomNumber: cleanRoomNumber,
+        sharingType: room ? room.sharingType : undefined,
+        rent: (embeddedTenant && embeddedTenant.rent) || (room ? room.rent : 0),
+        advancePaid: (embeddedTenant && embeddedTenant.advancePaid) || 0,
+        joiningDate: (embeddedTenant && embeddedTenant.joiningDate) || (standaloneTenant && standaloneTenant.createdAt) || undefined,
+        removedAt: new Date(),
+        removedBy: adminActor
+      });
+      console.log(`✔ Removed tenant ${cleanTenantId} stored in removed-tenants database collection.`);
+    } catch (dbErr) {
+      console.error('Error recording removed tenant in database:', dbErr);
+    }
+
     // STEP 1 & 2: Pull embedded tenant from Room and update Room status
     if (room && room.tenants) {
       const embedded = room.tenants.find(t => t.tenantId === cleanTenantId);
@@ -518,7 +570,6 @@ const verifyAndExecuteRemoval = async (req, res) => {
     await Complaint.deleteMany({ tenantId: cleanTenantId });
 
     // STEP 4: Delete standalone Tenant document
-    const Tenant = require('../models/Tenant');
     await Tenant.deleteMany({ tenantId: cleanTenantId });
     if (residentEmail) {
       await Tenant.deleteMany({ email: residentEmail });
@@ -918,6 +969,193 @@ const payRent = async (req, res) => {
   }
 };
 
+// Helper: Compute available months for removed tenants (rolling 12 months + any existing removed dates)
+const getRemovedTenantsMonths = async () => {
+  const defaultMonths = getValidMonthRange();
+  const RemovedTenant = require('../models/RemovedTenant');
+  const dates = await RemovedTenant.distinct('removedAt');
+  const monthSet = new Set(defaultMonths);
+  dates.forEach(d => {
+    if (d) {
+      const dateObj = new Date(d);
+      if (!isNaN(dateObj.getTime())) {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        monthSet.add(`${yyyy}-${mm}`);
+      }
+    }
+  });
+  return Array.from(monthSet).sort().reverse();
+};
+
+// Admin: View Removed Tenants List (GET /admin/removed-tenants)
+const getRemovedTenants = async (req, res) => {
+  try {
+    const RemovedTenant = require('../models/RemovedTenant');
+    const validMonths = await getRemovedTenantsMonths();
+    const selectedMonth = (req.query.month || 'all').trim();
+
+    let filterQuery = {};
+    if (selectedMonth && selectedMonth !== 'all' && /^\d{4}-\d{2}$/.test(selectedMonth)) {
+      const [yearStr, monthStr] = selectedMonth.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const startOfMonth = new Date(year, month - 1, 1, 0, 0, 0, 0);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+      filterQuery = { removedAt: { $gte: startOfMonth, $lte: endOfMonth } };
+    }
+
+    const removedTenants = await RemovedTenant.find(filterQuery).sort({ removedAt: -1 });
+
+    res.render('admin/removed-tenants', {
+      removedTenants,
+      validMonths,
+      selectedMonth,
+      success: req.query.success || null,
+      error: req.query.error || null,
+      activePage: 'removed-tenants'
+    });
+  } catch (error) {
+    console.error('Error in getRemovedTenants:', error);
+    res.status(500).send('Server Error loading removed tenants list');
+  }
+};
+
+// Admin: Email Removed Tenants List to Admin Gmail (GET /admin/removed-tenants/email)
+const emailRemovedTenantsReport = async (req, res) => {
+  try {
+    const RemovedTenant = require('../models/RemovedTenant');
+    const selectedMonth = (req.query.month || req.body.month || 'all').trim();
+
+    let filterQuery = {};
+    if (selectedMonth && selectedMonth !== 'all' && /^\d{4}-\d{2}$/.test(selectedMonth)) {
+      const [yearStr, monthStr] = selectedMonth.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const startOfMonth = new Date(year, month - 1, 1, 0, 0, 0, 0);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+      filterQuery = { removedAt: { $gte: startOfMonth, $lte: endOfMonth } };
+    }
+
+    const removedTenants = await RemovedTenant.find(filterQuery).sort({ removedAt: -1 });
+    const { sendEmail } = require('../services/emailservices');
+
+    const adminEmail = (req.session && req.session.user && req.session.user.email) 
+      ? req.session.user.email 
+      : (process.env.GOOGLEUSER || 'admin@gmail.com');
+
+    // Create CSV content for attachment
+    const createCsvStringifier = require('csv-writer').createObjectCsvStringifier;
+    const csvStringifier = createCsvStringifier({
+      header: [
+        { id: 'tenantId', title: 'Tenant ID' },
+        { id: 'name', title: 'Name' },
+        { id: 'email', title: 'Email' },
+        { id: 'phone', title: 'Phone' },
+        { id: 'emergencyContactNumber', title: 'Emergency Contact' },
+        { id: 'relation', title: 'Relation' },
+        { id: 'roomNumber', title: 'Room Number' },
+        { id: 'rent', title: 'Rent (INR)' },
+        { id: 'advancePaid', title: 'Advance Paid (INR)' },
+        { id: 'joiningDate', title: 'Joining Date' },
+        { id: 'removedAt', title: 'Removed Date' },
+        { id: 'removedBy', title: 'Removed By' }
+      ]
+    });
+
+    const csvData = removedTenants.map(t => ({
+      tenantId: t.tenantId,
+      name: t.name,
+      email: t.email || 'N/A',
+      phone: t.phone || 'N/A',
+      emergencyContactNumber: t.emergencyContactNumber || 'N/A',
+      relation: t.relation || 'N/A',
+      roomNumber: t.roomNumber,
+      rent: t.rent || 0,
+      advancePaid: t.advancePaid || 0,
+      joiningDate: t.joiningDate ? new Date(t.joiningDate).toISOString().slice(0, 10) : 'N/A',
+      removedAt: t.removedAt ? new Date(t.removedAt).toISOString().slice(0, 10) : 'N/A',
+      removedBy: t.removedBy || 'admin'
+    }));
+
+    const headerStr = csvStringifier.getHeaderString();
+    const recordsStr = csvStringifier.stringifyRecords(csvData);
+    const fullCsvContent = headerStr + recordsStr;
+
+    const monthLabel = selectedMonth === 'all' ? 'All Time' : selectedMonth;
+
+    // Create HTML table for email body
+    let rowsHtml = '';
+    if (removedTenants.length > 0) {
+      rowsHtml = removedTenants.map(t => `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.tenantId}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.name}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">Room ${t.roomNumber}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.phone || 'N/A'}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.emergencyContactNumber || 'N/A'} ${t.relation ? `(${t.relation})` : ''}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.email || 'N/A'}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">₹${(t.rent || 0).toLocaleString('en-IN')}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.removedAt ? new Date(t.removedAt).toLocaleDateString('en-IN') : 'N/A'}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${t.removedBy || 'admin'}</td>
+        </tr>
+      `).join('');
+    } else {
+      rowsHtml = `<tr><td colspan="9" style="padding: 12px; text-align: center;">No removed tenants recorded for this period (${monthLabel}).</td></tr>`;
+    }
+
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+        <h2 style="color: #6C63FF;">Pujyasritha's Living — Removed Tenants Report (${monthLabel})</h2>
+        <p>Hello Admin,</p>
+        <p>Here is the list of removed tenants for <strong>${monthLabel}</strong> stored in your database as requested.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+          <thead>
+            <tr style="background-color: #6C63FF; color: #ffffff;">
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Tenant ID</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Name</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Room</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Phone</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Emergency Contact</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Email</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Rent</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Removed Date</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Removed By</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <p style="margin-top: 20px; font-size: 0.85rem; color: #6C757D;">
+          Filter Applied: <strong>${monthLabel}</strong> | Total Records: <strong>${removedTenants.length}</strong> | Generated on: ${new Date().toLocaleString('en-IN')}
+        </p>
+      </div>
+    `;
+
+    await sendEmail(
+      adminEmail,
+      `Removed Tenants Report (${monthLabel}) — Pujyasritha's Living`,
+      `Here is the list of ${removedTenants.length} removed tenants for ${monthLabel}.`,
+      htmlBody,
+      [
+        {
+          filename: `removed-tenants-${monthLabel}-${new Date().toISOString().slice(0, 10)}.csv`,
+          content: fullCsvContent,
+          contentType: 'text/csv'
+        }
+      ]
+    );
+
+    return res.redirect(`/admin/removed-tenants?month=${selectedMonth}&success=${encodeURIComponent(`Removed tenants report (${monthLabel}) has been successfully sent to ${adminEmail}!`)}`);
+  } catch (error) {
+    console.error('Error in emailRemovedTenantsReport:', error);
+    return res.redirect(`/admin/removed-tenants?error=${encodeURIComponent('Failed to send email. Please check your email server settings.')}`);
+  }
+};
+
 module.exports = {
   getAdminDashboard,
   getAdminRooms,
@@ -934,5 +1172,8 @@ module.exports = {
   exportPayments,
   emailPaymentsReport,
   updatePaymentStatus,
-  payRent
+  payRent,
+  getRemovedTenants,
+  emailRemovedTenantsReport
 };
+

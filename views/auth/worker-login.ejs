@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Portal Login — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background-color: var(--bg-light); display: flex; flex-direction: column; min-height: 100vh;">
+  <%- include('../partials/header', { hideNavLinks: true }) %>
+
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem;">
+    <div class="card" style="width: 100%; max-width: 440px; padding: 2.5rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 56px; height: 56px; background: rgba(108, 99, 255, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <h2 style="margin-bottom: 0.25rem;">Worker Maintenance Portal</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to view and resolve assigned resident complaints</p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <form action="/worker/login" method="POST">
+        <div class="form-group">
+          <label for="username">Username or Email</label>
+          <input type="text" id="username" name="username" class="form-control" placeholder="Enter worker username or email" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 0.5rem;">
+          Sign In to Worker Portal
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; pt-3; border-top: 1px solid var(--border-color);">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          New staff member? <a href="/worker/register" style="color: var(--primary); font-weight: 600;">Create Worker Account</a>
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+          <a href="/" style="color: var(--text-muted); text-decoration: underline;">&larr; Back to Main Portal</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

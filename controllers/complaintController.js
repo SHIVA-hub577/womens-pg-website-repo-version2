@@ -1,7 +1,30 @@
 const Complaint = require('../models/Complaint');
 const Room = require('../models/Room');
 const Tenant = require('../models/Tenant');
+const Worker = require('../models/Worker');
 const { sendEmail } = require('../services/emailservices');
+
+// Helper to look up recipient email for a tenant
+const getTenantEmailForComplaint = async (tenantId) => {
+  let recipientEmail = null;
+  const tenantDoc = await Tenant.findOne({ tenantId });
+  if (tenantDoc && tenantDoc.email) {
+    recipientEmail = tenantDoc.email.trim().toLowerCase();
+  } else {
+    const roomMatch = await Room.findOne({ 'tenants.tenantId': tenantId });
+    if (roomMatch && roomMatch.tenants) {
+      const embedded = roomMatch.tenants.find(t => t.tenantId === tenantId);
+      if (embedded && embedded.email) {
+        recipientEmail = embedded.email.trim().toLowerCase();
+      }
+    }
+  }
+  return recipientEmail;
+};
+
+// ==========================================
+// TENANT COMPLAINT HANDLERS
+// ==========================================
 
 // Tenant: Render Complaints View (GET /tenant/complaints)
 const getTenantComplaints = async (req, res) => {
@@ -14,7 +37,6 @@ const getTenantComplaints = async (req, res) => {
     let tenantId = user.tenantId;
     let roomNumber = user.roomNumber;
 
-    // Live query on Room to catch any fresh room allotments
     if (!roomNumber && user.email) {
       const roomMatch = await Room.findOne({ 'tenants.email': user.email });
       if (roomMatch) {
@@ -23,20 +45,18 @@ const getTenantComplaints = async (req, res) => {
         if (embedded) {
           tenantId = embedded.tenantId;
         }
-        // Update session
         user.roomNumber = roomNumber;
         user.tenantId = tenantId;
       }
     }
 
     const hasAssignedRoom = Boolean(roomNumber && tenantId);
-
     let raisedComplaints = [];
     let resolvedComplaints = [];
 
     if (tenantId) {
       const allComplaints = await Complaint.find({ tenantId }).sort({ raisedAt: -1 });
-      raisedComplaints = allComplaints.filter(c => c.status === 'Raised');
+      raisedComplaints = allComplaints.filter(c => c.status !== 'Resolved');
       resolvedComplaints = allComplaints.filter(c => c.status === 'Resolved');
     }
 
@@ -67,7 +87,6 @@ const createTenantComplaint = async (req, res) => {
     let tenantId = user.tenantId;
     let roomNumber = user.roomNumber;
 
-    // Double-check room allocation from DB if missing in session
     if ((!roomNumber || !tenantId) && user.email) {
       const roomMatch = await Room.findOne({ 'tenants.email': user.email });
       if (roomMatch) {
@@ -77,7 +96,6 @@ const createTenantComplaint = async (req, res) => {
       }
     }
 
-    // Unassigned Room Guard: Reject POST if tenant has no room
     if (!roomNumber || !tenantId) {
       return res.redirect('/tenant/complaints?error=You cannot raise a complaint without an assigned room.');
     }
@@ -92,7 +110,7 @@ const createTenantComplaint = async (req, res) => {
       photo = '/uploads/complaints/' + req.file.filename;
     }
 
-    await Complaint.create({
+    const newComplaint = await Complaint.create({
       tenantId,
       roomNumber,
       description: description.trim(),
@@ -100,9 +118,16 @@ const createTenantComplaint = async (req, res) => {
       status: 'Raised'
     });
 
-    // Send Automatic Email Notification to Admin
+    // Send Automatic Email Notification to BOTH Admin and Worker(s)
     const adminEmails = process.env.ADMIN_EMAILS || process.env.GOOGLEUSER;
-    if (adminEmails) {
+    const workers = await Worker.find();
+    const workerEmails = workers.map(w => w.email).filter(Boolean);
+    const recipientList = Array.from(new Set([
+      ...(adminEmails ? adminEmails.split(',').map(e => e.trim()) : []),
+      ...workerEmails
+    ])).filter(Boolean).join(', ');
+
+    if (recipientList) {
       const tenantName = user.name || user.username || 'Resident';
       const tenantEmail = user.email || 'N/A';
       const subject = `🚨 New Complaint Raised - Room ${roomNumber} (${tenantName})`;
@@ -153,7 +178,7 @@ const createTenantComplaint = async (req, res) => {
             </tr>
           </table>
 
-          <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-left: 4px solid #d9534f; border-radius: 4px; border: 1px solid #eee; border-left-width: 4px;">
+          <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-left: 4px solid #d9534f; border-radius: 4px; border: 1px solid #eee;">
             <p style="margin: 0; font-weight: bold; color: #555;">Complaint Description:</p>
             <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.5;">${description.trim()}</p>
           </div>
@@ -168,10 +193,10 @@ const createTenantComplaint = async (req, res) => {
       `;
 
       try {
-        await sendEmail(adminEmails, subject, text, html, attachments);
-        console.log(`📧 Complaint alert email successfully sent to admin (${adminEmails})`);
+        await sendEmail(recipientList, subject, text, html, attachments);
+        console.log(`📧 Complaint alert email successfully sent to admin & workers (${recipientList})`);
       } catch (emailErr) {
-        console.warn('⚠️ Could not send complaint alert email to admin:', emailErr.message);
+        console.warn('⚠️ Could not send complaint alert email:', emailErr.message);
       }
     }
 
@@ -182,19 +207,22 @@ const createTenantComplaint = async (req, res) => {
   }
 };
 
+// ==========================================
+// ADMIN COMPLAINT HANDLERS
+// ==========================================
+
 // Admin: Render Complaints Overview (GET /admin/complaints)
 const getAdminComplaints = async (req, res) => {
   try {
     const rawComplaints = await Complaint.find().sort({ raisedAt: -1 });
+    const workers = await Worker.find().sort({ name: 1 });
 
-    // Fetch tenant contact details for each complaint
     const complaintsList = await Promise.all(
       rawComplaints.map(async (c) => {
         let tenantName = 'Resident';
         let tenantPhone = 'N/A';
         let tenantEmail = 'N/A';
 
-        // 1. Try finding in Room embedded tenants
         const roomMatch = await Room.findOne({ 'tenants.tenantId': c.tenantId });
         if (roomMatch && roomMatch.tenants) {
           const embedded = roomMatch.tenants.find(t => t.tenantId === c.tenantId);
@@ -205,7 +233,6 @@ const getAdminComplaints = async (req, res) => {
           }
         }
 
-        // 2. Fallback to Tenant account collection
         if (tenantName === 'Resident') {
           const tDoc = await Tenant.findOne({ tenantId: c.tenantId });
           if (tDoc) {
@@ -222,8 +249,14 @@ const getAdminComplaints = async (req, res) => {
           description: c.description,
           photo: c.photo,
           status: c.status,
+          assignedWorker: c.assignedWorker,
+          assignedWorkerName: c.assignedWorkerName,
+          assignedWorkerEmail: c.assignedWorkerEmail,
+          updates: c.updates || [],
           resolutionNote: c.resolutionNote,
           resolutionPhoto: c.resolutionPhoto,
+          resolvedByRole: c.resolvedByRole,
+          resolvedByName: c.resolvedByName,
           raisedAt: c.raisedAt,
           resolvedAt: c.resolvedAt,
           tenantName,
@@ -235,6 +268,7 @@ const getAdminComplaints = async (req, res) => {
 
     res.render('admin/complaints', {
       complaints: complaintsList,
+      workers,
       error: req.query.error || null,
       success: req.query.success || null,
       activePage: 'complaints'
@@ -242,6 +276,108 @@ const getAdminComplaints = async (req, res) => {
   } catch (error) {
     console.error('Error in getAdminComplaints:', error);
     res.status(500).send('Server Error loading admin complaints page');
+  }
+};
+
+// Admin: Assign Worker to Complaint (POST /admin/complaints/:id/assign)
+const assignWorkerToComplaint = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { workerId } = req.body;
+
+    if (!workerId) {
+      return res.redirect('/admin/complaints?error=Please select a worker to assign.');
+    }
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.redirect('/admin/complaints?error=Complaint not found.');
+    }
+
+    const worker = await Worker.findById(workerId);
+    if (!worker) {
+      return res.redirect('/admin/complaints?error=Selected worker does not exist.');
+    }
+
+    complaint.assignedWorker = worker._id;
+    complaint.assignedWorkerName = worker.name;
+    complaint.assignedWorkerEmail = worker.email;
+    if (complaint.status === 'Raised') {
+      complaint.status = 'In Progress';
+    }
+
+    await complaint.save();
+
+    // Notify assigned worker via email
+    try {
+      const subject = `🔧 Complaint Assigned: Room ${complaint.roomNumber}`;
+      const text = `Hello ${worker.name},\n\nYou have been assigned to handle a maintenance complaint for Room ${complaint.roomNumber}.\n\nDescription: ${complaint.description}\n\nPlease check your Worker Portal to update progress.`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+          <h2 style="color: #6C63FF;">Pujyasritha's Living — Worker Assignment</h2>
+          <p>Hello <strong>${worker.name}</strong>,</p>
+          <p>You have been assigned to handle a maintenance complaint:</p>
+          <div style="background: #F5F6FA; padding: 15px; border-left: 4px solid #6C63FF; border-radius: 4px; margin: 15px 0;">
+            <p><strong>Room Number:</strong> Room ${complaint.roomNumber}</p>
+            <p><strong>Tenant ID:</strong> ${complaint.tenantId}</p>
+            <p><strong>Description:</strong> ${complaint.description}</p>
+          </div>
+          <p>Log into your Worker Portal to post progress updates and upload resolution proof once completed.</p>
+        </div>
+      `;
+      await sendEmail(worker.email, subject, text, html);
+    } catch (mailErr) {
+      console.warn('⚠️ Could not send assignment email to worker:', mailErr.message);
+    }
+
+    return res.redirect('/admin/complaints?success=Worker assigned successfully!');
+  } catch (error) {
+    console.error('Error in assignWorkerToComplaint:', error);
+    return res.redirect('/admin/complaints?error=Failed to assign worker.');
+  }
+};
+
+// Admin: Add Update Message to Complaint (POST /admin/complaints/:id/update)
+const addAdminComplaintUpdate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { message } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.redirect('/admin/complaints?error=Update message cannot be empty.');
+    }
+
+    const complaint = await Complaint.findById(id);
+    if (!complaint) {
+      return res.redirect('/admin/complaints?error=Complaint not found.');
+    }
+
+    let photo = null;
+    if (req.file) {
+      photo = '/uploads/complaints/' + req.file.filename;
+    }
+
+    const adminUser = req.session.user;
+    const authorName = (adminUser && (adminUser.name || adminUser.username)) ? adminUser.name || adminUser.username : 'Admin';
+
+    if (!complaint.updates) complaint.updates = [];
+    complaint.updates.push({
+      authorRole: 'admin',
+      authorName,
+      message: message.trim(),
+      photo,
+      createdAt: new Date()
+    });
+
+    if (complaint.status === 'Raised') {
+      complaint.status = 'In Progress';
+    }
+
+    await complaint.save();
+    return res.redirect('/admin/complaints?success=Progress update posted successfully!');
+  } catch (error) {
+    console.error('Error in addAdminComplaintUpdate:', error);
+    return res.redirect('/admin/complaints?error=Failed to add update.');
   }
 };
 
@@ -255,42 +391,43 @@ const resolveAdminComplaint = async (req, res) => {
       return res.redirect('/admin/complaints?error=Resolution description note is required.');
     }
 
-    const complaint = await Complaint.findById(id);
-    if (!complaint) {
-      return res.redirect('/admin/complaints?error=Complaint record not found.');
-    }
-
     let resolutionPhoto = null;
     if (req.file) {
       resolutionPhoto = '/uploads/complaints/' + req.file.filename;
     }
 
-    complaint.status = 'Resolved';
-    complaint.resolutionNote = resolutionNote.trim();
-    if (resolutionPhoto) {
-      complaint.resolutionPhoto = resolutionPhoto;
-    }
-    complaint.resolvedAt = new Date();
+    const adminUser = req.session.user;
+    const adminName = (adminUser && (adminUser.name || adminUser.username)) ? adminUser.name || adminUser.username : 'Admin Management';
 
-    await complaint.save();
-
-    // Normalized Email Lookup: Query Tenant document by tenantId
-    let recipientEmail = null;
-    const tenantDoc = await Tenant.findOne({ tenantId: complaint.tenantId });
-    if (tenantDoc && tenantDoc.email) {
-      recipientEmail = tenantDoc.email.trim().toLowerCase();
-    } else {
-      // Fallback: check Room embedded tenant email if Tenant user doc is not registered yet
-      const roomMatch = await Room.findOne({ 'tenants.tenantId': complaint.tenantId });
-      if (roomMatch && roomMatch.tenants) {
-        const embedded = roomMatch.tenants.find(t => t.tenantId === complaint.tenantId);
-        if (embedded && embedded.email) {
-          recipientEmail = embedded.email.trim().toLowerCase();
+    // Atomic update to ensure idempotency & prevent double-resolving
+    const complaint = await Complaint.findOneAndUpdate(
+      { _id: id, status: { $ne: 'Resolved' } },
+      {
+        $set: {
+          status: 'Resolved',
+          resolutionNote: resolutionNote.trim(),
+          ...(resolutionPhoto ? { resolutionPhoto } : {}),
+          resolvedByRole: 'admin',
+          resolvedByName: adminName,
+          resolvedAt: new Date()
         }
+      },
+      { new: true }
+    );
+
+    if (!complaint) {
+      const existing = await Complaint.findById(id);
+      if (!existing) {
+        return res.redirect('/admin/complaints?error=Complaint record not found.');
       }
+      if (existing.status === 'Resolved') {
+        return res.redirect('/admin/complaints?error=This complaint has already been resolved.');
+      }
+      return res.redirect('/admin/complaints?error=Failed to resolve complaint.');
     }
 
-    // Send email notification if recipient email exists
+    // 1. Notify Tenant
+    const recipientEmail = await getTenantEmailForComplaint(complaint.tenantId);
     if (recipientEmail) {
       try {
         const subject = `Your Complaint for Room ${complaint.roomNumber} Has Been Resolved`;
@@ -299,21 +436,30 @@ const resolveAdminComplaint = async (req, res) => {
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
             <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
             <p>Hello,</p>
-            <p>Your raised complaint for <strong>Room ${complaint.roomNumber}</strong> has been marked as <span style="color: #22C55E; font-weight: bold;">Resolved</span>.</p>
+            <p>Your raised complaint for <strong>Room ${complaint.roomNumber}</strong> has been marked as <span style="color: #22C55E; font-weight: bold;">Resolved</span> by Admin.</p>
             <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
               <strong>Management Resolution Note:</strong>
               <p style="margin-top: 5px; color: #4A5568;">${complaint.resolutionNote}</p>
             </div>
-            <p style="font-size: 0.9rem; color: #6C757D;">You can view the resolution details and photo evidence in your Resident Portal under the Complaints tab.</p>
+            <p style="font-size: 0.9rem; color: #6C757D;">You can view the resolution details and photo evidence in your Resident Portal.</p>
           </div>
         `;
         await sendEmail(recipientEmail, subject, text, html);
-        console.log(`✔ Resolution notification email sent to ${recipientEmail}`);
       } catch (mailErr) {
-        console.warn(`⚠️ Could not send resolution email to ${recipientEmail}:`, mailErr.message);
+        console.warn(`⚠️ Could not send resolution email to tenant ${recipientEmail}:`, mailErr.message);
       }
-    } else {
-      console.warn(`⚠️ No registered account email found for tenantId ${complaint.tenantId}; skipped resolution email notification.`);
+    }
+
+    // 2. Notify Assigned Worker if present
+    if (complaint.assignedWorkerEmail) {
+      try {
+        const subject = `Complaint for Room ${complaint.roomNumber} Resolved by Admin`;
+        const text = `Hello, complaint for Room ${complaint.roomNumber} assigned to you has been marked as resolved by Admin.`;
+        const html = `<p>The complaint for <strong>Room ${complaint.roomNumber}</strong> has been officially marked as resolved by Admin.</p>`;
+        await sendEmail(complaint.assignedWorkerEmail, subject, text, html);
+      } catch (workerMailErr) {
+        console.warn(`⚠️ Could not send resolution notice to worker:`, workerMailErr.message);
+      }
     }
 
     return res.redirect('/admin/complaints?success=Complaint marked as Resolved successfully!');
@@ -323,9 +469,225 @@ const resolveAdminComplaint = async (req, res) => {
   }
 };
 
+// ==========================================
+// WORKER COMPLAINT HANDLERS
+// ==========================================
+
+// Worker: Render Assigned Complaints (GET /worker/complaints)
+const getWorkerComplaints = async (req, res) => {
+  try {
+    const worker = req.session.user;
+    if (!worker || worker.role !== 'worker') {
+      return res.redirect('/worker/login');
+    }
+
+    const mongoose = require('mongoose');
+    const workerObjectId = mongoose.Types.ObjectId.isValid(worker.id)
+      ? new mongoose.Types.ObjectId(worker.id)
+      : null;
+
+    // Assignment & Access Control:
+    // If no worker is assigned (assignedWorker is null), any worker can access it.
+    // If a worker is assigned by admin, ONLY that specific worker can access it.
+    const rawComplaints = await Complaint.find({
+      $or: [
+        { assignedWorker: null },
+        { assignedWorker: worker.id },
+        ...(workerObjectId ? [{ assignedWorker: workerObjectId }] : [])
+      ]
+    }).sort({ raisedAt: -1 });
+
+    const complaintsList = await Promise.all(
+      rawComplaints.map(async (c) => {
+        let tenantName = 'Resident';
+        let tenantPhone = 'N/A';
+        let tenantEmail = 'N/A';
+
+        const roomMatch = await Room.findOne({ 'tenants.tenantId': c.tenantId });
+        if (roomMatch && roomMatch.tenants) {
+          const embedded = roomMatch.tenants.find(t => t.tenantId === c.tenantId);
+          if (embedded) {
+            tenantName = embedded.name || tenantName;
+            tenantPhone = embedded.phone || tenantPhone;
+            tenantEmail = embedded.email || tenantEmail;
+          }
+        }
+
+        if (tenantName === 'Resident') {
+          const tDoc = await Tenant.findOne({ tenantId: c.tenantId });
+          if (tDoc) {
+            tenantName = tDoc.name || tDoc.username || tenantName;
+            tenantPhone = tDoc.phone || tenantPhone;
+            tenantEmail = tDoc.email || tenantEmail;
+          }
+        }
+
+        return {
+          id: c._id,
+          tenantId: c.tenantId,
+          roomNumber: c.roomNumber,
+          description: c.description,
+          photo: c.photo,
+          status: c.status,
+          assignedWorker: c.assignedWorker,
+          assignedWorkerName: c.assignedWorkerName,
+          updates: c.updates || [],
+          resolutionNote: c.resolutionNote,
+          resolutionPhoto: c.resolutionPhoto,
+          resolvedByRole: c.resolvedByRole,
+          resolvedByName: c.resolvedByName,
+          raisedAt: c.raisedAt,
+          resolvedAt: c.resolvedAt,
+          tenantName,
+          tenantPhone,
+          tenantEmail
+        };
+      })
+    );
+
+    res.render('worker/complaints', {
+      user: worker,
+      complaints: complaintsList,
+      error: req.query.error || null,
+      success: req.query.success || null,
+      activePage: 'complaints'
+    });
+  } catch (error) {
+    console.error('Error in getWorkerComplaints:', error);
+    res.status(500).send('Server Error loading worker portal complaints');
+  }
+};
+
+// Worker: Mark Complaint as Resolved (POST /worker/complaints/:id/resolve)
+const resolveWorkerComplaint = async (req, res) => {
+  try {
+    const worker = req.session.user;
+    if (!worker || worker.role !== 'worker') {
+      return res.redirect('/worker/login');
+    }
+
+    const { id } = req.params;
+    const { resolutionNote } = req.body;
+
+    if (!resolutionNote || !resolutionNote.trim()) {
+      return res.redirect('/worker/complaints?error=Resolution note is required.');
+    }
+
+    let resolutionPhoto = null;
+    if (req.file) {
+      resolutionPhoto = '/uploads/complaints/' + req.file.filename;
+    }
+
+    const workerName = worker.name || worker.username || 'Worker';
+
+    // Idempotency & Access Control Enforcement:
+    // 1. Complaint must NOT be already Resolved ($ne: 'Resolved')
+    // 2. Complaint must either be unassigned (assignedWorker: null) OR explicitly assigned to this worker
+    const mongoose = require('mongoose');
+    const workerObjectId = mongoose.Types.ObjectId.isValid(worker.id)
+      ? new mongoose.Types.ObjectId(worker.id)
+      : null;
+
+    const updatedComplaint = await Complaint.findOneAndUpdate(
+      {
+        _id: id,
+        status: { $ne: 'Resolved' },
+        $or: [
+          { assignedWorker: null },
+          { assignedWorker: worker.id },
+          ...(workerObjectId ? [{ assignedWorker: workerObjectId }] : [])
+        ]
+      },
+      {
+        $set: {
+          status: 'Resolved',
+          assignedWorker: worker.id,
+          assignedWorkerName: workerName,
+          assignedWorkerEmail: worker.email,
+          resolutionNote: resolutionNote.trim(),
+          ...(resolutionPhoto ? { resolutionPhoto } : {}),
+          resolvedByRole: 'worker',
+          resolvedByName: workerName,
+          resolvedAt: new Date()
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedComplaint) {
+      const existing = await Complaint.findById(id);
+      if (!existing) {
+        return res.redirect('/worker/complaints?error=Complaint not found.');
+      }
+      if (existing.status === 'Resolved') {
+        return res.redirect('/worker/complaints?error=This complaint has already been resolved.');
+      }
+      if (existing.assignedWorker && existing.assignedWorker.toString() !== worker.id.toString()) {
+        return res.redirect('/worker/complaints?error=Access denied. This complaint is assigned to another worker.');
+      }
+      return res.redirect('/worker/complaints?error=Failed to resolve complaint. Please try again.');
+    }
+
+    // Send notifications to Tenant and Admin
+    const recipientEmail = await getTenantEmailForComplaint(updatedComplaint.tenantId);
+    if (recipientEmail) {
+      try {
+        const subject = `Your Complaint for Room ${updatedComplaint.roomNumber} Has Been Resolved by Worker`;
+        const text = `Hello, your complaint regarding Room ${updatedComplaint.roomNumber} has been resolved by maintenance worker ${workerName}.\n\nResolution Note:\n${updatedComplaint.resolutionNote}\n\nThank you!`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+            <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
+            <p>Hello,</p>
+            <p>Your maintenance complaint for <strong>Room ${updatedComplaint.roomNumber}</strong> has been marked as <span style="color: #22C55E; font-weight: bold;">Resolved</span> by Worker (${workerName}).</p>
+            <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
+              <strong>Worker Resolution Note:</strong>
+              <p style="margin-top: 5px; color: #4A5568;">${updatedComplaint.resolutionNote}</p>
+            </div>
+            <p style="font-size: 0.9rem; color: #6C757D;">You can view resolution proof and photo evidence in your Resident Portal.</p>
+          </div>
+        `;
+        await sendEmail(recipientEmail, subject, text, html);
+      } catch (tenantMailErr) {
+        console.warn('⚠️ Could not send resolution email to tenant:', tenantMailErr.message);
+      }
+    }
+
+    const adminEmails = process.env.ADMIN_EMAILS || process.env.GOOGLEUSER;
+    if (adminEmails) {
+      try {
+        const subject = `✅ Complaint Resolved by Worker (${workerName}) — Room ${updatedComplaint.roomNumber}`;
+        const text = `Worker ${workerName} has resolved the complaint for Room ${updatedComplaint.roomNumber}.\n\nResolution Note:\n${updatedComplaint.resolutionNote}`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+            <h2 style="color: #22C55E;">✅ Complaint Marked as Resolved</h2>
+            <p>Worker <strong>${workerName}</strong> has resolved the maintenance complaint for <strong>Room ${updatedComplaint.roomNumber}</strong> (Tenant ID: ${updatedComplaint.tenantId}).</p>
+            <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
+              <strong>Worker Resolution Note:</strong>
+              <p style="margin-top: 5px;">${updatedComplaint.resolutionNote}</p>
+            </div>
+            <p style="font-size: 0.85rem; color: #6C757D;">Timestamp: ${new Date().toLocaleString('en-IN')}</p>
+          </div>
+        `;
+        await sendEmail(adminEmails, subject, text, html);
+      } catch (adminMailErr) {
+        console.warn('⚠️ Could not send resolution email to admin:', adminMailErr.message);
+      }
+    }
+
+    return res.redirect('/worker/complaints?success=Complaint marked as Resolved successfully!');
+  } catch (error) {
+    console.error('Error in resolveWorkerComplaint:', error);
+    return res.redirect('/worker/complaints?error=Failed to resolve complaint.');
+  }
+};
+
 module.exports = {
   getTenantComplaints,
   createTenantComplaint,
   getAdminComplaints,
-  resolveAdminComplaint
+  assignWorkerToComplaint,
+  addAdminComplaintUpdate,
+  resolveAdminComplaint,
+  getWorkerComplaints,
+  resolveWorkerComplaint
 };

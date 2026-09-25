@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Removed Tenants List — Pujyasritha's Living</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="app-container">
+    <%- include('../partials/sidebar') %>
+
+    <main class="main-content">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1>Removed Tenants List</h1>
+          <p style="color: var(--text-muted);">Historical log of all removed residents stored securely in database</p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <!-- Month Filter Dropdown -->
+          <form action="/admin/removed-tenants" method="GET" style="display: flex; align-items: center; gap: 0.5rem;">
+            <label for="month" style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">Filter Month:</label>
+            <select id="month" name="month" class="form-control" onchange="this.form.submit()" style="width: auto; padding: 0.4rem 0.8rem;">
+              <option value="all" <%= typeof selectedMonth !== 'undefined' && selectedMonth === 'all' ? 'selected' : '' %>>All (All Time)</option>
+              <% if (typeof validMonths !== 'undefined' && validMonths && validMonths.length > 0) { %>
+                <% validMonths.forEach(m => { %>
+                  <option value="<%= m %>" <%= typeof selectedMonth !== 'undefined' && m === selectedMonth ? 'selected' : '' %>>
+                    <%= new Date(m + '-01T00:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %> (<%= m %>)
+                  </option>
+                <% }); %>
+              <% } %>
+            </select>
+          </form>
+
+          <a href="/admin/removed-tenants/email?month=<%= typeof selectedMonth !== 'undefined' ? selectedMonth : 'all' %>" class="btn btn-primary" style="width: auto; display: flex; align-items: center; gap: 0.5rem;" onclick="return confirm('Send removed tenants report to your admin Gmail address?')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Send to Mail
+          </a>
+        </div>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-info"><%= success %></div>
+      <% } %>
+
+      <div class="metric-grid" style="margin-bottom: 1.5rem;">
+        <div class="metric-card">
+          <div class="metric-title">Removed Tenants (<%= typeof selectedMonth !== 'undefined' && selectedMonth !== 'all' ? selectedMonth : 'All Time' %>)</div>
+          <div class="metric-value" style="color: #EF4444;"><%= removedTenants ? removedTenants.length : 0 %></div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Stored permanently in database</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tenant ID</th>
+                <th>Name</th>
+                <th>Room No</th>
+                <th>Phone</th>
+                <th>Emergency Contact</th>
+                <th>Email</th>
+                <th>Rent / Advance</th>
+                <th>Joining Date</th>
+                <th>Removed Date</th>
+                <th>Removed By</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (removedTenants && removedTenants.length > 0) { %>
+                <% removedTenants.forEach(t => { %>
+                  <tr>
+                    <td><strong><%= t.tenantId %></strong></td>
+                    <td>
+                      <div style="font-weight: 600;"><%= t.name %></div>
+                      <% if (t.age || t.gender) { %>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= t.gender || '' %> <%= t.age ? '(' + t.age + ' yrs)' : '' %></div>
+                      <% } %>
+                    </td>
+                    <td><span class="badge badge-purple">Room <%= t.roomNumber %></span></td>
+                    <td><%= t.phone || 'N/A' %></td>
+                    <td>
+                      <% if (t.emergencyContactNumber) { %>
+                        <div><%= t.emergencyContactNumber %></div>
+                        <% if (t.relation) { %>
+                          <div style="font-size: 0.75rem; color: var(--text-muted);">(<%= t.relation %>)</div>
+                        <% } %>
+                      <% } else { %>
+                        <span style="color: var(--text-muted);">N/A</span>
+                      <% } %>
+                    </td>
+                    <td><%= t.email || 'N/A' %></td>
+                    <td>
+                      <div>₹<%= (t.rent || 0).toLocaleString('en-IN') %></div>
+                      <div style="font-size: 0.75rem; color: var(--text-muted);">Adv: ₹<%= (t.advancePaid || 0).toLocaleString('en-IN') %></div>
+                    </td>
+                    <td><%= t.joiningDate ? new Date(t.joiningDate).toLocaleDateString('en-IN') : 'N/A' %></td>
+                    <td>
+                      <div style="color: #EF4444; font-weight: 500;">
+                        <%= t.removedAt ? new Date(t.removedAt).toLocaleDateString('en-IN') : 'N/A' %>
+                      </div>
+                      <div style="font-size: 0.75rem; color: var(--text-muted);">
+                        <%= t.removedAt ? new Date(t.removedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '' %>
+                      </div>
+                    </td>
+                    <td><span class="badge badge-gray"><%= t.removedBy || 'admin' %></span></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 0.5rem auto; display: block; opacity: 0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    No removed tenants found in database for <%= typeof selectedMonth !== 'undefined' && selectedMonth !== 'all' ? selectedMonth : 'selected period' %>.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

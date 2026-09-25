@@ -807,7 +807,7 @@
 
   <!-- Portal Cards Section -->
   <div class="portal-section-wrapper">
-    <div class="portal-grid">
+    <div class="portal-grid" style="max-width: 1100px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
       <!-- Resident Portal Card -->
       <div class="portal-card">
         <div>
@@ -815,11 +815,26 @@
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
           <div class="portal-title">Resident Portal</div>
-          <div class="portal-desc">Access your assigned room details, rent payment records, profile information, and raise maintenance tickets easily.</div>
+          <div class="portal-desc">Access your assigned room details, rent payment records, profile information, and raise maintenance complaints.</div>
         </div>
         <div class="action-group">
           <a href="/login" class="btn btn-primary">Resident Login</a>
           <a href="/register" class="btn btn-outline">New Resident Register</a>
+        </div>
+      </div>
+
+      <!-- Worker Portal Card -->
+      <div class="portal-card">
+        <div>
+          <div class="portal-icon-box" style="background: rgba(108, 99, 255, 0.1); color: var(--primary);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div class="portal-title">Worker Portal</div>
+          <div class="portal-desc">Maintenance staff portal to view assigned task tickets, post work progress updates, and upload resolution proof.</div>
+        </div>
+        <div class="action-group">
+          <a href="/worker/login" class="btn btn-primary" style="background-color: var(--primary);">Worker Login</a>
+          <a href="/worker/register" class="btn btn-outline">Worker Register</a>
         </div>
       </div>
 
@@ -830,7 +845,7 @@
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
           </div>
           <div class="portal-title">PG Management</div>
-          <div class="portal-desc">Manage room allocations, tenant directory, occupancy tracking, and resident complaints seamlessly.</div>
+          <div class="portal-desc">Manage room allocations, tenant directory, occupancy tracking, worker assignments, and resident complaints.</div>
         </div>
         <div class="action-group">
           <a href="/admin/login" class="btn btn-primary" style="background-color: #2F2F2F;">Admin Login</a>

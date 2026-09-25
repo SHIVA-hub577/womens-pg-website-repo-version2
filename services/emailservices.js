@@ -71,4 +71,19 @@ const sendEmail = async (to, subject, text, html, attachments = []) => {
   }
 };
 
-module.exports = { transporter, sendEmail };
+// Utility wrapper to send simple notification email
+const sendNotification = async (email, subject, message) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <h2 style="color: #6C63FF; margin-top: 0;">Pujyasritha's Living</h2>
+      <p style="font-size: 16px; line-height: 1.5; color: #333;">${message}</p>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
+        This is an automated notification from Pujyasritha's Living Management System.
+      </p>
+    </div>
+  `;
+  return await sendEmail(email, subject, message, html);
+};
+
+module.exports = { transporter, sendEmail, sendNotification };

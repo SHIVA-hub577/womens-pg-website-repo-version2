@@ -15,6 +15,8 @@ router.get('/admin/tenants', dashboardController.getAdminTenants);
 router.get('/admin/tenants/new', dashboardController.renderAddTenant);
 router.post('/admin/tenants/new', dashboardController.createTenant);
 router.get('/admin/complaints', complaintController.getAdminComplaints);
+router.post('/admin/complaints/:id/assign', complaintController.assignWorkerToComplaint);
+router.post('/admin/complaints/:id/update', upload.single('photo'), complaintController.addAdminComplaintUpdate);
 router.post('/admin/complaints/:id/resolve', upload.single('resolutionPhoto'), complaintController.resolveAdminComplaint);
 router.get('/admin/remove-tenant', dashboardController.renderRemoveTenant);
 router.post('/admin/tenants/:tenantId/request-removal', dashboardController.requestTenantRemoval);
@@ -25,5 +27,8 @@ router.get('/admin/payments', dashboardController.getAdminPayments);
 router.get('/admin/payments/export', dashboardController.exportPayments);
 router.get('/admin/payments/email', dashboardController.emailPaymentsReport);
 router.post('/admin/payments/:tenantId/update', dashboardController.updatePaymentStatus);
+
+router.get('/admin/removed-tenants', dashboardController.getRemovedTenants);
+router.get('/admin/removed-tenants/email', dashboardController.emailRemovedTenantsReport);
 
 module.exports = router;
