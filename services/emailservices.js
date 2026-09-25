@@ -1,10 +1,16 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
+const http = require('http');
+const https = require('https');
 
 // Force Node.js process to prefer IPv4 over IPv6 globally (fixes Render IPv6 ENETUNREACH)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
+
+// Force HTTP and HTTPS agents to use IPv4 family for OAuth token requests & external API calls
+if (http.globalAgent) http.globalAgent.options.family = 4;
+if (https.globalAgent) https.globalAgent.options.family = 4;
 
 // Custom IPv4 lookup fallback
 const customIPv4Lookup = (hostname, options, callback) => {

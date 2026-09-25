@@ -1,10 +1,15 @@
 require('dotenv').config();
 const dns = require('dns');
+const http = require('http');
+const https = require('https');
 
 // Force Node.js process to prefer IPv4 over IPv6 globally (fixes Render IPv6 ENETUNREACH)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
+
+if (http.globalAgent) http.globalAgent.options.family = 4;
+if (https.globalAgent) https.globalAgent.options.family = 4;
 
 const path = require('path');
 const express = require('express');
