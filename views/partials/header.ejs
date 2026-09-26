@@ -37,10 +37,23 @@
   </div>
 </header>
 
-<% if (typeof hideNavLinks === 'undefined' || !hideNavLinks) { %>
-  <script>
+<script>
+  (function() {
+    const path = window.location.pathname;
+    const role = '<%= typeof user !== "undefined" && user ? user.role : "" %>';
+    
+    if (path.startsWith('/tenant') || role === 'tenant') {
+      document.body.classList.add('portal-tenant');
+    } else if (path.startsWith('/worker') || role === 'worker') {
+      document.body.classList.add('portal-worker');
+    } else if (path.startsWith('/admin') || role === 'admin') {
+      document.body.classList.add('portal-admin');
+    }
+  })();
+
+  <% if (typeof hideNavLinks === 'undefined' || !hideNavLinks) { %>
     document.getElementById('hamburgerBtn')?.addEventListener('click', function() {
       document.getElementById('navLinks')?.classList.toggle('active');
     });
-  </script>
-<% } %>
+  <% } %>
+</script>
