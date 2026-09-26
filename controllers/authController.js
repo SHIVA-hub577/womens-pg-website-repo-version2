@@ -150,7 +150,7 @@ const sendRegistrationOtp = async (req, res) => {
     const subject = `Verify Your ${roleTitle} Registration Code: ${code}`;
     const text = `Your verification code is ${code}. It is valid for 5 minutes.`;
     const html = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+      <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
         <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
         <p>Your <strong>${roleTitle} Account Registration</strong> code is:</p>
         <h1 style="background: #F5F6FA; padding: 10px 20px; display: inline-block; letter-spacing: 5px; color: #6C63FF; border-radius: 8px;">${code}</h1>

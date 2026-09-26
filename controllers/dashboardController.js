@@ -389,7 +389,7 @@ const requestTenantRemoval = async (req, res) => {
       const subject = `Hostel Removal Verification OTP: ${freshCode}`;
       const text = `Hello ${embedded.name || 'Resident'},\n\nYour hostel removal verification OTP code for Room ${cleanRoomNumber} is: ${freshCode}\n\nPlease share this 6-digit code with the PG Admin to complete your removal.\n\nThis code is valid for 15 minutes.`;
       const html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+        <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
           <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
           <p>Hello <strong>${embedded.name || 'Resident'}</strong>,</p>
           <p>An admin has initiated a hostel removal request for <strong>Room ${cleanRoomNumber}</strong>.</p>
@@ -585,7 +585,7 @@ const verifyAndExecuteRemoval = async (req, res) => {
         const subject = "Hostel Residency Terminated — Pujyasritha's Living";
         const text = `Hello ${residentName},\n\nYour residency at Pujyasritha's Living for Room ${cleanRoomNumber} has been officially removed and finalized by management.\n\nThank you for staying with us.`;
         const html = `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
             <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
             <p>Hello <strong>${residentName}</strong>,</p>
             <p>Your residency at Pujyasritha's Living for <strong>Room ${cleanRoomNumber}</strong> has been officially removed and finalized.</p>
@@ -1105,7 +1105,7 @@ const emailRemovedTenantsReport = async (req, res) => {
     }
 
     const htmlBody = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+      <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
         <h2 style="color: #6C63FF;">Pujyasritha's Living — Removed Tenants Report (${monthLabel})</h2>
         <p>Hello Admin,</p>
         <p>Here is the list of removed tenants for <strong>${monthLabel}</strong> stored in your database as requested.</p>

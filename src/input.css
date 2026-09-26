@@ -376,16 +376,7 @@ a {
   overflow: hidden;
 }
 
-.metric-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--primary);
-  border-radius: 4px 0 0 4px;
-}
+
 
 .metric-card:hover {
   transform: translateY(-5px);
@@ -746,9 +737,7 @@ a {
   font-size: 3.2rem;
   line-height: 1.15;
   font-weight: 700;
-  background: linear-gradient(135deg, #4f0e2f 0%, #752d4d 50%, #946927 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #4f0e2f;
   margin-bottom: 1rem;
   animation: fadeInUp 0.75s ease-out;
 }
@@ -836,26 +825,10 @@ a {
   overflow: hidden;
 }
 
-.portal-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #6b2c3e 0%, #d79f62 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 .portal-card:hover {
   box-shadow: 0 24px 50px -12px rgba(107, 44, 62, 0.2);
   border-color: rgba(107, 44, 62, 0.4);
   transform: translateY(-8px);
-}
-
-.portal-card:hover::before {
-  opacity: 1;
 }
 
 .portal-icon-box {
@@ -1309,18 +1282,25 @@ a {
 }
 
 .faq-answer {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease-out, padding 0.35s ease-out;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease-out, opacity 0.35s ease-out;
+  opacity: 0;
   padding: 0 1.5rem;
   color: var(--text-muted);
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
+.faq-answer > p,
+.faq-answer > div {
+  overflow: hidden;
+}
+
 .faq-item.active .faq-answer {
-  max-height: 200px;
-  padding: 0 1.5rem 1.25rem 1.5rem;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  padding-bottom: 1.25rem;
 }
 
 .modal-overlay {
@@ -1524,16 +1504,7 @@ a {
   overflow: hidden;
 }
 
-.metric-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--primary);
-  border-radius: 4px 0 0 4px;
-}
+
 
 .metric-card:hover {
   transform: translateY(-4px);
@@ -1642,6 +1613,71 @@ a {
   font-weight: 600;
   letter-spacing: 0.01em;
 }
+
+/* 3D Animations & WebGL Canvas Utilities */
+.perspective-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-3d {
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+  position: relative;
+}
+
+.tilt-card-3d::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.15), transparent 40%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.tilt-card-3d:hover::after {
+  opacity: 1;
+}
+
+.tilt-child-3d {
+  transform: translateZ(28px);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.magnetic-btn {
+  display: inline-block;
+  will-change: transform;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+
+
+
+
 
 
 

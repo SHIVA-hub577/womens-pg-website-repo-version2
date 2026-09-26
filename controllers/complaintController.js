@@ -151,7 +151,7 @@ const createTenantComplaint = async (req, res) => {
       }
 
       const html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #fafafa;">
+        <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #fafafa;">
           <h2 style="color: #d9534f; margin-top: 0;">🚨 New Tenant Complaint Raised</h2>
           <p>A new maintenance complaint has been submitted in the portal:</p>
           
@@ -178,7 +178,7 @@ const createTenantComplaint = async (req, res) => {
             </tr>
           </table>
 
-          <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-left: 4px solid #d9534f; border-radius: 4px; border: 1px solid #eee;">
+          <div style="margin-top: 15px; padding: 15px; background: #ffffff; border-radius: 6px; border: 1px solid #fecaca;">
             <p style="margin: 0; font-weight: bold; color: #555;">Complaint Description:</p>
             <p style="margin: 8px 0 0 0; font-size: 15px; line-height: 1.5;">${description.trim()}</p>
           </div>
@@ -313,11 +313,11 @@ const assignWorkerToComplaint = async (req, res) => {
       const subject = `🔧 Complaint Assigned: Room ${complaint.roomNumber}`;
       const text = `Hello ${worker.name},\n\nYou have been assigned to handle a maintenance complaint for Room ${complaint.roomNumber}.\n\nDescription: ${complaint.description}\n\nPlease check your Worker Portal to update progress.`;
       const html = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+        <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
           <h2 style="color: #6C63FF;">Pujyasritha's Living — Worker Assignment</h2>
           <p>Hello <strong>${worker.name}</strong>,</p>
           <p>You have been assigned to handle a maintenance complaint:</p>
-          <div style="background: #F5F6FA; padding: 15px; border-left: 4px solid #6C63FF; border-radius: 4px; margin: 15px 0;">
+          <div style="background: #F5F6FA; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin: 15px 0;">
             <p><strong>Room Number:</strong> Room ${complaint.roomNumber}</p>
             <p><strong>Tenant ID:</strong> ${complaint.tenantId}</p>
             <p><strong>Description:</strong> ${complaint.description}</p>
@@ -433,11 +433,11 @@ const resolveAdminComplaint = async (req, res) => {
         const subject = `Your Complaint for Room ${complaint.roomNumber} Has Been Resolved`;
         const text = `Hello, your complaint regarding Room ${complaint.roomNumber} has been resolved by PG management.\n\nResolution Note:\n${complaint.resolutionNote}\n\nThank you!`;
         const html = `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
             <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
             <p>Hello,</p>
             <p>Your raised complaint for <strong>Room ${complaint.roomNumber}</strong> has been marked as <span style="color: #22C55E; font-weight: bold;">Resolved</span> by Admin.</p>
-            <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <div style="background: #F5F6FA; border: 1px solid #e2e8f0; padding: 15px; margin: 15px 0; border-radius: 8px;">
               <strong>Management Resolution Note:</strong>
               <p style="margin-top: 5px; color: #4A5568;">${complaint.resolutionNote}</p>
             </div>
@@ -635,11 +635,11 @@ const resolveWorkerComplaint = async (req, res) => {
         const subject = `Your Complaint for Room ${updatedComplaint.roomNumber} Has Been Resolved by Worker`;
         const text = `Hello, your complaint regarding Room ${updatedComplaint.roomNumber} has been resolved by maintenance worker ${workerName}.\n\nResolution Note:\n${updatedComplaint.resolutionNote}\n\nThank you!`;
         const html = `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
             <h2 style="color: #6C63FF;">Pujyasritha's Living</h2>
             <p>Hello,</p>
             <p>Your maintenance complaint for <strong>Room ${updatedComplaint.roomNumber}</strong> has been marked as <span style="color: #22C55E; font-weight: bold;">Resolved</span> by Worker (${workerName}).</p>
-            <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <div style="background: #F5F6FA; border: 1px solid #e2e8f0; padding: 15px; margin: 15px 0; border-radius: 8px;">
               <strong>Worker Resolution Note:</strong>
               <p style="margin-top: 5px; color: #4A5568;">${updatedComplaint.resolutionNote}</p>
             </div>
@@ -658,10 +658,10 @@ const resolveWorkerComplaint = async (req, res) => {
         const subject = `✅ Complaint Resolved by Worker (${workerName}) — Room ${updatedComplaint.roomNumber}`;
         const text = `Worker ${workerName} has resolved the complaint for Room ${updatedComplaint.roomNumber}.\n\nResolution Note:\n${updatedComplaint.resolutionNote}`;
         const html = `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #2F2F2F;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 20px; color: #2F2F2F;">
             <h2 style="color: #22C55E;">✅ Complaint Marked as Resolved</h2>
             <p>Worker <strong>${workerName}</strong> has resolved the maintenance complaint for <strong>Room ${updatedComplaint.roomNumber}</strong> (Tenant ID: ${updatedComplaint.tenantId}).</p>
-            <div style="background: #F5F6FA; border-left: 4px solid #22C55E; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <div style="background: #F5F6FA; border: 1px solid #e2e8f0; padding: 15px; margin: 15px 0; border-radius: 8px;">
               <strong>Worker Resolution Note:</strong>
               <p style="margin-top: 5px;">${updatedComplaint.resolutionNote}</p>
             </div>

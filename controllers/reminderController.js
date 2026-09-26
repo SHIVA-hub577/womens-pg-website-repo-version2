@@ -179,7 +179,7 @@ const processRentReminders = async (isTest = false) => {
       const adminMessage = `${pendingListForReport.length} tenants have pending rent payments for month ${currentMonth}.`;
 
       const adminHtml = `
-        <div style="background-color: #faf4f5; padding: 40px 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <div style="background-color: #faf4f5; padding: 40px 15px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
           <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(107, 44, 62, 0.08); border: 1px solid #f3e8eb;">
             
             <!-- Premium Header Banner -->
@@ -200,7 +200,7 @@ const processRentReminders = async (isTest = false) => {
               </p>
 
               <!-- Key Stat Highlight Card -->
-              <div style="background: linear-gradient(135deg, #fff5f7 0%, #fff0f3 100%); border-left: 5px solid #6b2c3e; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #fce7f3;">
+              <div style="background: linear-gradient(135deg, #fff5f7 0%, #fff0f3 100%); border: 1px solid #fbcfe8; padding: 20px; border-radius: 12px; margin: 25px 0;">
                 <div style="font-size: 36px; font-weight: 800; color: #6b2c3e; font-family: 'Georgia', serif;">
                   ${pendingListForReport.length}
                 </div>
